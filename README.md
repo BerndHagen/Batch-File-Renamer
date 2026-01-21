@@ -248,10 +248,10 @@ The following screenshots demonstrate the core functionality of Batch File Renam
   </tr>
   <tr>
     <th>Batch File Renamer - Operations Panel</th>
-    <th>Batch File Renamer - User Guide</th>
+    <th>Batch File Renamer - Duplicate Detection</th>
   </tr>
   <tr>
     <td><a href="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_operation.png" target="_blank"><img src="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_operation.png" alt="Batch File Renamer - Operations Panel" width="450"></a></td>
-    <td><a href="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_guide.png" target="_blank"><img src="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_guide.png" alt="Batch File Renamer - User Guide" width="450"></a></td>
+    <td><a href="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_duplicate.png" target="_blank"><img src="https://github.com/BerndHagen/Batch-File-Renamer/raw/main/img/img_v1.0.0-renamer_duplicate.png" alt="Batch File Renamer - Duplicate Detection" width="450"></a></td>
   </tr>
 </table>

@@ -5,13 +5,16 @@
 <h1 align="center">Batch File Renamer</h1>
 
 <p align="center">
-  <b>A modern, browser-based batch file renaming tool with instant live preview and powerful operations.</b><br>
-  <b>Drag and drop files, configure rename operations, and export all renamed files as a ZIP archive.</b>
+  <a href="https://github.com/BerndHagen/Batch-File-Renamer/releases"><img src="https://img.shields.io/github/v/release/BerndHagen/Batch-File-Renamer?include_prereleases&style=flat-square&color=cd853f" alt="Latest Release"></a>&nbsp;&nbsp;
+  <a href="https://github.com/BerndHagen/Batch-File-Renamer/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-512bd4?style=flat-square" alt="License"></a>&nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react" alt="React Version">&nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?style=flat-square&logo=typescript" alt="TypeScript Version">&nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/Platform-Web-9f9f9f?style=flat-square" alt="Platform">&nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">&nbsp;&nbsp;
+  <a href="https://github.com/BerndHagen/Batch-File-Renamer/issues"><img src="https://img.shields.io/github/issues/BerndHagen/Batch-File-Renamer?style=flat-square&color=orange" alt="Open Issues"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/BerndHagen/Batch-File-Renamer/releases"><img src="https://img.shields.io/github/v/release/BerndHagen/Batch-File-Renamer?include_prereleases&style=flat-square&color=38bdf8" alt="Latest Release"></a>&nbsp;&nbsp;<a href="https://github.com/BerndHagen/Batch-File-Renamer/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License"></a>&nbsp;&nbsp;<img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react" alt="React Version">&nbsp;&nbsp;<img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?style=flat-square&logo=typescript" alt="TypeScript Version">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Platform-Web-brightgreen?style=flat-square" alt="Platform">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">&nbsp;&nbsp;<a href="https://github.com/BerndHagen/Batch-File-Renamer/issues"><img src="https://img.shields.io/github/issues/BerndHagen/Batch-File-Renamer?style=flat-square&color=orange" alt="Open Issues"></a>
-</p>
+
 
 **Batch File Renamer** is a web-based file renaming tool that allows you to rename multiple files at once with instant preview. Simply drag and drop files, configure your renaming operations, and download all renamed files as a ZIP archive.
 

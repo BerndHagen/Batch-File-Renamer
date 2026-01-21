@@ -7,7 +7,7 @@
  * Uses @dnd-kit for accessible drag-and-drop functionality.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   File, 
   Image, 
@@ -22,9 +22,10 @@ import {
   Check,
   Copy,
   AlertTriangle,
-  GripVertical,
-  GripHorizontal
+  GripVertical
 } from 'lucide-react';
+
+import type { CSSProperties } from 'react';
 import { Tooltip } from './Tooltip';
 import {
   DndContext,
@@ -263,7 +264,7 @@ export function FileList() {
       ? { height: `${itemHeight * 30}px` } 
       : { minHeight: '650px' };
   
-  const listStyle = files.length > 30 
+  const listStyle: CSSProperties = files.length > 30 
     ? { height: `${itemHeight * 30}px`, overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }
     : { height: `${listHeight}px`, overflowY: 'hidden', overflowX: 'hidden' };
   

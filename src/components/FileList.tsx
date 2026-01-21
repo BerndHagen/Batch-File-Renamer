@@ -200,19 +200,26 @@ export function FileList() {
   const clearFiles = useStore(state => state.clearFiles);
   const reorderFiles = useStore(state => state.reorderFiles);
   
-  const [listHeight, setListHeight] = useState(0);
-  const [itemHeight, setItemHeight] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const [singleItemHeight, setSingleItemHeight] = useState(60);
   
   useEffect(() => {
-    if (listRef.current && files.length > 0) {
-      const newHeight = listRef.current.scrollHeight;
-      setListHeight(newHeight);
-      if (files.length <= 30) {
-        setItemHeight(newHeight / files.length);
-      }
+    if (files.length > 0) {
+      const measureTimeout = setTimeout(() => {
+        if (listRef.current) {
+          const firstItem = listRef.current.querySelector('.file-item') as HTMLElement;
+          if (firstItem) {
+            const itemRect = firstItem.getBoundingClientRect();
+            const itemHeight = itemRect.height + 8;
+            if (itemHeight > 0 && itemHeight !== singleItemHeight) {
+              setSingleItemHeight(itemHeight);
+            }
+          }
+        }
+      }, 50);
+      return () => clearTimeout(measureTimeout);
     }
-  }, [files]);
+  }, [files.length, singleItemHeight]);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -258,15 +265,33 @@ export function FileList() {
   const duplicateCount = files.filter(f => f.errorMessage?.includes('Duplicate')).length;
   const errorCount = files.filter(f => !f.isValid && !f.errorMessage?.includes('Duplicate')).length;
   
-  const panelStyle = files.length === 0 
-    ? { height: '650px' } 
-    : files.length > 30 
-      ? { height: `${itemHeight * 30}px` } 
-      : { minHeight: '650px' };
+  const MAX_ITEMS_VISIBLE = 30;
+  const HEADER_PADDING = 76;
+  const BOTTOM_PADDING = 20;
   
-  const listStyle: CSSProperties = files.length > 30 
-    ? { height: `${itemHeight * 30}px`, overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }
-    : { height: `${listHeight}px`, overflowY: 'hidden', overflowX: 'hidden' };
+  const calculatedContentHeight = (files.length * singleItemHeight) - 8;
+  const maxContentHeight = (MAX_ITEMS_VISIBLE * singleItemHeight) - 8;
+  
+  let panelStyle: CSSProperties;
+  let listStyle: CSSProperties;
+  
+  if (files.length > MAX_ITEMS_VISIBLE) {
+    const totalPanelHeight = maxContentHeight + HEADER_PADDING + BOTTOM_PADDING;
+    panelStyle = { height: `${totalPanelHeight}px` };
+    listStyle = { 
+      height: `${maxContentHeight}px`, 
+      overflowY: 'auto', 
+      overflowX: 'hidden', 
+      scrollbarGutter: 'stable' 
+    };
+  } else {
+    const totalPanelHeight = calculatedContentHeight + HEADER_PADDING + BOTTOM_PADDING;
+    panelStyle = { height: `${totalPanelHeight}px` };
+    listStyle = { 
+      overflowY: 'hidden', 
+      overflowX: 'hidden' 
+    };
+  }
   
   return (
     <div className="glass-card p-5 flex flex-col" style={panelStyle}>

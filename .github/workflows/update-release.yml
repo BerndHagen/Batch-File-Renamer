@@ -1,0 +1,68 @@
+name: Update Release
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(TZ='Europe/Berlin' date +'%d-%m-%Y at %I:%M %p')" >> $GITHUB_OUTPUT
+
+      - name: Get commit messages since last tag
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"• ⠀%s" --no-merges -20)
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"• ⠀%s" --no-merges)
+          fi
+          
+          if [ -z "$COMMITS" ]; then
+            COMMITS="• ⠀Minor updates and improvements"
+          fi
+          
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create source code zip
+        run: |
+          zip -r source-code.zip . -x ".git/*" -x "node_modules/*" -x "dist/*"
+
+      - name: Delete existing release
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Batch-File-Renamer"
+          files: source-code.zip
+          body: |
+            **Release: ${{ steps.date.outputs.date }}**
+            
+            This release includes updates and improvements to the Batch File Renamer application. Below is a summary of the changes included in this update.
+            
+            ${{ steps.changelog.outputs.commits }}
+            
+            **Note:** If you encounter any bugs or issues, please don't hesitate to open an [issue](https://github.com/BerndHagen/Batch-File-Renamer/issues). For any questions or to start a discussion, feel free to initiate a [discussion](https://github.com/BerndHagen/Batch-File-Renamer/discussions) on the GitHub repository.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

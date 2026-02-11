@@ -44,19 +44,23 @@ export function ExportButton() {
     try {
       const zip = new JSZip();
       
+      // Pass File/Blob references directly instead of reading into ArrayBuffer
+      // JSZip will stream each file during generation, avoiding loading everything into memory at once
       for (const file of validFiles) {
-        const content = await file.originalFile.arrayBuffer();
-        zip.file(file.newName, content);
+        zip.file(file.newName, file.originalFile);
       }
       
       // Also add unchanged files if there are any
       const unchangedFiles = files.filter(f => f.isValid && f.originalName === f.newName);
       for (const file of unchangedFiles) {
-        const content = await file.originalFile.arrayBuffer();
-        zip.file(file.newName, content);
+        zip.file(file.newName, file.originalFile);
       }
       
-      const blob = await zip.generateAsync({ type: 'blob' });
+      const blob = await zip.generateAsync({ 
+        type: 'blob',
+        streamFiles: true,
+        compression: 'STORE'
+      });
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       saveAs(blob, `renamed-files-${timestamp}.zip`);
       

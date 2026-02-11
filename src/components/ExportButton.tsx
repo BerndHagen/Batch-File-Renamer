@@ -1,16 +1,63 @@
 /**
  * ExportButton.tsx - ZIP Export Component
- * 
- * Handles exporting renamed files as a ZIP archive using JSZip.
- * Downloads all valid renamed files plus unchanged files.
- * Shows loading state and success/error feedback to the user.
  */
 
 import { useState } from 'react';
 import { Download, Loader, CheckCircle, AlertCircle } from 'lucide-react';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+import { Zip, ZipPassThrough } from 'fflate';
 import { useStore } from '../store';
+
+async function streamZipToDisk(allFiles: { name: string; file: File }[], writable: WritableStreamDefaultWriter) {
+  return new Promise<void>((resolve, reject) => {
+    const zip = new Zip((err, chunk, final) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      writable.write(chunk).then(() => {
+        if (final) {
+          writable.close().then(resolve).catch(reject);
+        }
+      }).catch(reject);
+    });
+
+    (async () => {
+      for (const { name, file } of allFiles) {
+        const entry = new ZipPassThrough(name);
+        zip.add(entry);
+        const buffer = await file.arrayBuffer();
+        entry.push(new Uint8Array(buffer), true);
+      }
+      zip.end();
+    })().catch(reject);
+  });
+}
+
+async function generateZipBlob(allFiles: { name: string; file: File }[]): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    const zip = new Zip((err, chunk, final) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      chunks.push(chunk);
+      if (final) {
+        resolve(new Blob(chunks, { type: 'application/zip' }));
+      }
+    });
+
+    (async () => {
+      for (const { name, file } of allFiles) {
+        const entry = new ZipPassThrough(name);
+        zip.add(entry);
+        const buffer = await file.arrayBuffer();
+        entry.push(new Uint8Array(buffer), true);
+      }
+      zip.end();
+    })().catch(reject);
+  });
+}
 
 export function ExportButton() {
   const [isExporting, setIsExporting] = useState(false);
@@ -21,7 +68,6 @@ export function ExportButton() {
   const validFiles = files.filter(f => f.isValid && f.originalName !== f.newName);
   const canExport = validFiles.length > 0;
   
-  // Determine button text based on state
   const getButtonText = () => {
     if (files.length === 0) {
       return 'Add Files to Start';
@@ -42,27 +88,44 @@ export function ExportButton() {
     setExportResult(null);
     
     try {
-      const zip = new JSZip();
-      
-      // Pass File/Blob references directly instead of reading into ArrayBuffer
-      // JSZip will stream each file during generation, avoiding loading everything into memory at once
-      for (const file of validFiles) {
-        zip.file(file.newName, file.originalFile);
-      }
-      
-      // Also add unchanged files if there are any
       const unchangedFiles = files.filter(f => f.isValid && f.originalName === f.newName);
-      for (const file of unchangedFiles) {
-        zip.file(file.newName, file.originalFile);
+      const allFiles = [...validFiles, ...unchangedFiles].map(f => ({
+        name: f.newName,
+        file: f.originalFile
+      }));
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `renamed-files-${timestamp}.zip`;
+      
+      if ('showSaveFilePicker' in window) {
+        try {
+          const fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{ description: 'ZIP Archive', accept: { 'application/zip': ['.zip'] } }]
+          });
+          const writable = await fileHandle.createWritable();
+          const writer = writable.getWriter();
+          
+          await streamZipToDisk(allFiles, writer);
+          
+          setExportResult('success');
+          setTimeout(() => setExportResult(null), 3000);
+          return;
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return;
+          console.warn('File System Access API failed, falling back to blob download:', err);
+        }
       }
       
-      const blob = await zip.generateAsync({ 
-        type: 'blob',
-        streamFiles: true,
-        compression: 'STORE'
-      });
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      saveAs(blob, `renamed-files-${timestamp}.zip`);
+      const blob = await generateZipBlob(allFiles);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       
       setExportResult('success');
       setTimeout(() => setExportResult(null), 3000);
@@ -89,7 +152,6 @@ export function ExportButton() {
         ${exportResult === 'error' ? '!bg-gradient-to-r !from-red-500 !to-red-600 !shadow-red-500/25' : ''}
       `}
     >
-      {/* Shimmer effect */}
       {canExport && !isExporting && !exportResult && (
         <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
           <div className="w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />

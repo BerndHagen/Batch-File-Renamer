@@ -26,7 +26,7 @@ export function Header() {
               Batch File Renamer
             </h1>
             <p className="text-xs text-dark-500">
-              Professional file renaming tool
+              Professional File Renaming Tool
             </p>
           </div>
         </Link>

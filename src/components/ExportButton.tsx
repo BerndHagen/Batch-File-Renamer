@@ -1,62 +1,29 @@
 /**
  * ExportButton.tsx - ZIP Export Component
+ * Uses client-zip for ZIP64 support (handles archives > 4 GB)
  */
 
 import { useState } from 'react';
 import { Download, Loader, CheckCircle, AlertCircle } from 'lucide-react';
-import { Zip, ZipPassThrough } from 'fflate';
+import { downloadZip } from 'client-zip';
 import { useStore } from '../store';
 
-async function streamZipToDisk(allFiles: { name: string; file: File }[], writable: WritableStreamDefaultWriter) {
-  return new Promise<void>((resolve, reject) => {
-    const zip = new Zip((err, chunk, final) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      writable.write(chunk).then(() => {
-        if (final) {
-          writable.close().then(resolve).catch(reject);
-        }
-      }).catch(reject);
-    });
+async function streamZipToDisk(allFiles: { name: string; input: File }[], writable: WritableStreamDefaultWriter) {
+  const response = downloadZip(allFiles);
+  const reader = response.body!.getReader();
 
-    (async () => {
-      for (const { name, file } of allFiles) {
-        const entry = new ZipPassThrough(name);
-        zip.add(entry);
-        const buffer = await file.arrayBuffer();
-        entry.push(new Uint8Array(buffer), true);
-      }
-      zip.end();
-    })().catch(reject);
-  });
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    await writable.write(value);
+  }
+
+  await writable.close();
 }
 
-async function generateZipBlob(allFiles: { name: string; file: File }[]): Promise<Blob> {
-  return new Promise<Blob>((resolve, reject) => {
-    const chunks: Uint8Array[] = [];
-    const zip = new Zip((err, chunk, final) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      chunks.push(chunk);
-      if (final) {
-        resolve(new Blob(chunks, { type: 'application/zip' }));
-      }
-    });
-
-    (async () => {
-      for (const { name, file } of allFiles) {
-        const entry = new ZipPassThrough(name);
-        zip.add(entry);
-        const buffer = await file.arrayBuffer();
-        entry.push(new Uint8Array(buffer), true);
-      }
-      zip.end();
-    })().catch(reject);
-  });
+async function generateZipBlob(allFiles: { name: string; input: File }[]): Promise<Blob> {
+  const response = downloadZip(allFiles);
+  return await response.blob();
 }
 
 export function ExportButton() {
@@ -91,7 +58,7 @@ export function ExportButton() {
       const unchangedFiles = files.filter(f => f.isValid && f.originalName === f.newName);
       const allFiles = [...validFiles, ...unchangedFiles].map(f => ({
         name: f.newName,
-        file: f.originalFile
+        input: f.originalFile
       }));
       
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

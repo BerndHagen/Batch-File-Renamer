@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --bg: #060807;
-  --bg-2: #0b0d0c;
+  --bg: #070807;
+  --bg-2: #111412;
   --panel: rgba(18, 21, 20, 0.82);
   --panel-strong: rgba(23, 27, 26, 0.94);
   --panel-soft: rgba(255, 255, 255, 0.045);
@@ -78,9 +78,8 @@ button:disabled {
   position: relative;
   overflow-x: hidden;
   background:
-    linear-gradient(135deg, rgba(115, 247, 255, 0.06), transparent 26%),
-    linear-gradient(315deg, rgba(255, 196, 93, 0.05), transparent 30%),
-    linear-gradient(180deg, var(--bg), var(--bg-2) 58%, #050605);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 22rem),
+    linear-gradient(180deg, var(--bg), var(--bg-2) 42%, #060706 100%);
 }
 
 .ambient-grid,
@@ -92,36 +91,42 @@ button:disabled {
 
 .ambient-grid {
   z-index: 0;
-  opacity: 0.55;
+  opacity: 0.82;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 54px 54px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.15));
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 18px),
+    linear-gradient(90deg, rgba(115, 247, 255, 0.035), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 196, 93, 0.018), transparent 24rem);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.46) 45rem, rgba(0, 0, 0, 0.16));
 }
 
 .ambient-grid::after {
   content: "";
   position: absolute;
   inset: 0;
+  opacity: 0.58;
   background:
-    linear-gradient(120deg, transparent 0%, rgba(115, 247, 255, 0.08) 48%, transparent 50%),
-    linear-gradient(300deg, transparent 0%, rgba(255, 92, 168, 0.05) 52%, transparent 54%);
-  background-size: 420px 420px, 620px 620px;
-  animation: grid-drift 22s linear infinite;
+    repeating-linear-gradient(135deg, transparent 0 108px, rgba(255, 255, 255, 0.028) 108px 109px, transparent 109px 216px),
+    repeating-linear-gradient(45deg, transparent 0 180px, rgba(115, 247, 255, 0.025) 180px 181px, transparent 181px 360px);
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.78) 18%, rgba(0, 0, 0, 0.58) 72%, rgba(0, 0, 0, 0.12));
 }
 
 .ambient-beam {
   z-index: 0;
-  opacity: 0.34;
+  opacity: 1;
 }
 
 .ambient-beam-a {
-  background: linear-gradient(105deg, transparent 0 24%, rgba(115, 247, 255, 0.11) 24.4%, transparent 25.2% 100%);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.64), transparent 9rem, transparent calc(100% - 9rem), rgba(0, 0, 0, 0.58)),
+    linear-gradient(180deg, transparent 0 9rem, rgba(0, 0, 0, 0.28) 38rem, rgba(0, 0, 0, 0.72));
 }
 
 .ambient-beam-b {
-  background: linear-gradient(74deg, transparent 0 70%, rgba(255, 196, 93, 0.09) 70.3%, transparent 71.1% 100%);
+  inset: 4.25rem 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(115, 247, 255, 0.22) 18%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 196, 93, 0.16) 82%, transparent);
 }
 
 .app-header,
@@ -835,15 +840,6 @@ input[type="checkbox"]:checked::after {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes grid-drift {
-  from {
-    background-position: 0 0, 0 0;
-  }
-  to {
-    background-position: 420px 420px, -620px 620px;
   }
 }
 

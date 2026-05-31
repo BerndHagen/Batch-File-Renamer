@@ -1,14 +1,17 @@
-/**
- * App.tsx - Main Application Component
- * 
- * The root component that orchestrates the batch file renaming interface.
- * Manages the overall layout including the file drop zone, operations panel,
- * presets, and export functionality. Provides undo/redo support and
- * real-time preview of filename changes.
- */
-
-import { useState } from 'react';
-import { Trash2, Save, Lightbulb, Settings2, Sparkles, Undo2, Redo2, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Activity,
+  AlertTriangle,
+  Files,
+  ListChecks,
+  Redo2,
+  Save,
+  Settings2,
+  ShieldCheck,
+  Trash2,
+  Undo2,
+  Zap,
+} from 'lucide-react';
 import { Header, Footer } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList } from './components/FileList';
@@ -19,6 +22,14 @@ import { ExportButton } from './components/ExportButton';
 import { SavePresetModal } from './components/SavePresetModal';
 import { Tooltip } from './components/Tooltip';
 import { useStore } from './store';
+
+const isEditableTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.isContentEditable ||
+    ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+  );
+};
 
 function App() {
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -31,98 +42,109 @@ function App() {
   const canRedo = useStore(state => state.canRedo);
   const showAdvanced = useStore(state => state.showAdvanced);
   const setShowAdvanced = useStore(state => state.setShowAdvanced);
-  
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || isEditableTarget(event.target)) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (key === 'z' && event.shiftKey) {
+        event.preventDefault();
+        if (canRedo()) redo();
+        return;
+      }
+
+      if (key === 'z') {
+        event.preventDefault();
+        if (canUndo()) undo();
+        return;
+      }
+
+      if (key === 'y') {
+        event.preventDefault();
+        if (canRedo()) redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canRedo, canUndo, redo, undo]);
+
   const changedCount = files.filter(f => f.originalName !== f.newName).length;
   const errorCount = files.filter(f => !f.isValid).length;
-  const unchangedCount = files.length - changedCount;
-  
+  const validCount = files.length - errorCount;
+  const statusText = errorCount > 0 ? `${errorCount} issue${errorCount === 1 ? '' : 's'}` : 'Clean';
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #0a0f1a 0%, #0d1424 100%)' }}>
-      {/* Particle background */}
-      <div className="bg-particles" />
-      
-      {/* Subtle side glows */}
-      <div className="side-glow side-glow-left" />
-      <div className="side-glow side-glow-right" />
-      
+    <div className="app-shell min-h-screen flex flex-col">
+      <div className="ambient-grid" />
+      <div className="ambient-beam ambient-beam-a" />
+      <div className="ambient-beam ambient-beam-b" />
+
       <Header />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
-        {/* Main content area with slightly brighter background */}
-        <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.35) 0%, rgba(20, 30, 48, 0.2) 100%)' }}>
-          {/* Statistics Banner */}
-          {files.length > 0 && (
-            <div className="mb-6 glass-card p-4 flex items-center justify-between animate-fade-in">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-white">{files.length}</span>
-                  <span className="text-sm text-dark-400">files loaded</span>
-                </div>
-                <div className="h-8 w-px bg-dark-700" />
-                {changedCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                    <span className="text-sm text-dark-300">{changedCount} will be renamed</span>
-                  </div>
-                )}
-                {unchangedCount > 0 && changedCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-dark-500" />
-                    <span className="text-sm text-dark-400">{unchangedCount} unchanged</span>
-                  </div>
-                )}
-                {errorCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="text-sm text-red-400">{errorCount} errors</span>
-                  </div>
-                )}
-              </div>
-              <ExportButton />
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Files */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Drop Zone */}
-              <DropZone />
-              
-              {/* File List */}
-              <FileList />
+
+      <main className="relative z-10 flex-1 container mx-auto px-4 py-6 lg:py-8">
+        <section className="command-bar mb-6">
+          <div className="min-w-0">
+            <p className="eyebrow">Rename Console</p>
+            <h2 className="command-title">Batch processing workspace</h2>
           </div>
-          
-          {/* Right Column - Operations */}
-          <div className="space-y-6">
-            {/* Presets */}
+
+          <div className="command-metrics">
+            <div className="metric">
+              <Files className="metric-icon text-cyan-300" />
+              <span className="metric-value">{files.length}</span>
+              <span className="metric-label">Files</span>
+            </div>
+            <div className="metric">
+              <Activity className="metric-icon text-amber-300" />
+              <span className="metric-value">{changedCount}</span>
+              <span className="metric-label">Queued</span>
+            </div>
+            <div className={`metric ${errorCount > 0 ? 'metric-danger' : ''}`}>
+              {errorCount > 0 ? (
+                <AlertTriangle className="metric-icon text-red-300" />
+              ) : (
+                <ShieldCheck className="metric-icon text-emerald-300" />
+              )}
+              <span className="metric-value">{errorCount}</span>
+              <span className="metric-label">Issues</span>
+            </div>
+          </div>
+
+          <div className="command-action">
+            <ExportButton />
+          </div>
+        </section>
+
+        <div className="workspace-grid">
+          <section className="space-y-5 min-w-0">
+            <DropZone />
+            <FileList />
+          </section>
+
+          <aside className="space-y-5 min-w-0">
             <PresetList />
-            
-            {/* Operations */}
-            <div className="glass-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Settings2 className="w-5 h-5 text-cyan-400" />
-                  <h2 className="text-lg font-semibold text-white">
-                    Operations
-                  </h2>
+
+            <section className="panel p-5">
+              <div className="section-heading mb-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Settings2 className="w-5 h-5 text-cyan-300" />
+                  <h2>Operations</h2>
                   {operations.length > 0 && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-cyan-500/20 text-cyan-400">
-                      {operations.length}
-                    </span>
+                    <span className="count-pill">{operations.length}</span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center gap-1">
-                  {/* Undo/Redo buttons */}
                   <Tooltip text="Undo (Ctrl+Z)">
                     <button
                       onClick={undo}
                       disabled={!canUndo()}
-                      className={`p-2 rounded-lg transition-all duration-200 ${
-                        canUndo() 
-                          ? 'text-dark-400 hover:text-cyan-400 hover:bg-cyan-500/10' 
-                          : 'text-dark-600 cursor-not-allowed'
-                      }`}
+                      className="icon-button"
+                      aria-label="Undo"
                     >
                       <Undo2 className="w-4 h-4" />
                     </button>
@@ -131,46 +153,42 @@ function App() {
                     <button
                       onClick={redo}
                       disabled={!canRedo()}
-                      className={`p-2 rounded-lg transition-all duration-200 ${
-                        canRedo() 
-                          ? 'text-dark-400 hover:text-cyan-400 hover:bg-cyan-500/10' 
-                          : 'text-dark-600 cursor-not-allowed'
-                      }`}
+                      className="icon-button"
+                      aria-label="Redo"
                     >
                       <Redo2 className="w-4 h-4" />
                     </button>
                   </Tooltip>
-                  
-                  <div className="w-px h-5 bg-dark-700 mx-1" />
-                  
-                  <Tooltip text={showAdvanced ? 'Switch to Basic Mode' : 'Switch to Advanced Mode'}>
+
+                  <span className="toolbar-separator" />
+
+                  <Tooltip text={showAdvanced ? 'Basic mode' : 'Advanced mode'}>
                     <button
                       onClick={() => setShowAdvanced(!showAdvanced)}
-                      className={`p-2 rounded-lg transition-all duration-200 ${
-                        showAdvanced 
-                          ? 'text-purple-400 bg-purple-500/10 hover:bg-purple-500/20' 
-                          : 'text-dark-400 hover:text-purple-400 hover:bg-purple-500/10'
-                      }`}
+                      className={`icon-button ${showAdvanced ? 'is-active' : ''}`}
+                      aria-label={showAdvanced ? 'Switch to basic mode' : 'Switch to advanced mode'}
                     >
                       <Zap className="w-4 h-4" />
                     </button>
                   </Tooltip>
-                  
+
                   {operations.length > 0 && (
                     <>
-                      <div className="w-px h-5 bg-dark-700 mx-1" />
-                      <Tooltip text="Save as preset">
+                      <span className="toolbar-separator" />
+                      <Tooltip text="Save preset">
                         <button
                           onClick={() => setShowSaveModal(true)}
-                          className="p-2 rounded-lg text-dark-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200"
+                          className="icon-button"
+                          aria-label="Save preset"
                         >
                           <Save className="w-4 h-4" />
                         </button>
                       </Tooltip>
-                      <Tooltip text="Clear all operations">
+                      <Tooltip text="Clear operations">
                         <button
                           onClick={clearOperations}
-                          className="p-2 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                          className="icon-button danger"
+                          aria-label="Clear operations"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -179,50 +197,48 @@ function App() {
                   )}
                 </div>
               </div>
-              
+
               <OperationsList />
-              
+
               <div className="mt-4">
                 <AddOperationButton />
               </div>
-            </div>
-            
-            {/* Tips Card */}
-            <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-lg font-semibold text-white">Pro Tips</h2>
+            </section>
+
+            <section className="panel p-5">
+              <div className="section-heading mb-4">
+                <div className="flex items-center gap-2">
+                  <ListChecks className="w-5 h-5 text-emerald-300" />
+                  <h2>Integrity</h2>
+                </div>
               </div>
-              <ul className="text-xs text-dark-400 space-y-2">
-                <li className="flex items-start gap-2">
-                  <Sparkles className="w-3 h-3 text-cyan-500 mt-0.5 flex-shrink-0" />
-                  <span>Operations apply in order from top to bottom</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="w-3 h-3 text-cyan-500 mt-0.5 flex-shrink-0" />
-                  <span>Drag & drop files directly into the browser</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="w-3 h-3 text-cyan-500 mt-0.5 flex-shrink-0" />
-                  <span>Use presets for common rename tasks</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="w-3 h-3 text-cyan-500 mt-0.5 flex-shrink-0" />
-                  <span>Changes preview instantly before export</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+
+              <div className="status-stack">
+                <div className="status-row">
+                  <span>Queue</span>
+                  <strong>{files.length > 0 ? `${validCount}/${files.length} valid` : 'Empty'}</strong>
+                </div>
+                <div className="status-row">
+                  <span>Rule chain</span>
+                  <strong>{operations.length > 0 ? `${operations.length} active` : 'Idle'}</strong>
+                </div>
+                <div className="status-row">
+                  <span>Validation</span>
+                  <strong className={errorCount > 0 ? 'text-red-300' : 'text-emerald-300'}>
+                    {statusText}
+                  </strong>
+                </div>
+              </div>
+            </section>
+          </aside>
         </div>
       </main>
-      
+
       <Footer />
-      
-      {/* Modals */}
-      <SavePresetModal 
-        isOpen={showSaveModal} 
-        onClose={() => setShowSaveModal(false)} 
+
+      <SavePresetModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
       />
     </div>
   );

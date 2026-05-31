@@ -36,6 +36,21 @@ import type {
 /** Generates a unique 9-character alphanumeric ID */
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
+const cloneOperations = (operations: Operation[]): Operation[] =>
+  operations.map(op => ({
+    ...op,
+    config: { ...op.config } as OperationConfig,
+  }));
+
+const getFileSourceKey = (file: File) => {
+  const fileWithPath = file as File & { webkitRelativePath?: string };
+  return [
+    fileWithPath.webkitRelativePath || file.name,
+    file.size,
+    file.lastModified,
+  ].join('|');
+};
+
 // Default presets defined inline
 const defaultPresets: Preset[] = [
   {
@@ -342,9 +357,10 @@ const applyRemoveChars = (name: string, config: RemoveCharsConfig): string => {
       return name.slice(0, -config.count || name.length);
     case 'range':
       return name.slice(0, config.startIndex) + name.slice(config.endIndex);
-    case 'specific':
+    case 'specific': {
       const chars = config.characters.split('');
       return name.split('').filter(c => !chars.includes(c)).join('');
+    }
     case 'pattern':
       try {
         const regex = new RegExp(config.pattern, 'g');
@@ -464,7 +480,7 @@ const formatDate = (date: Date, format: string): string => {
   
   let result = format;
   for (const [token, value] of Object.entries(tokens)) {
-    result = result.replace(token, value);
+    result = result.split(token).join(value);
   }
   return result;
 };
@@ -507,13 +523,15 @@ const applyTrim = (name: string, config: TrimConfig): string => {
 
 /** Modifies file extension: change, add, remove, lowercase, or uppercase */
 const applyExtension = (extension: string, config: ExtensionConfig): string => {
+  const nextExtension = config.newExtension.trim();
+
   switch (config.action) {
     case 'change':
-      return config.newExtension.startsWith('.') 
-        ? config.newExtension 
-        : `.${config.newExtension}`;
+      if (!nextExtension) return extension;
+      return nextExtension.startsWith('.') ? nextExtension : `.${nextExtension}`;
     case 'add':
-      return `${extension}${config.newExtension.startsWith('.') ? config.newExtension : `.${config.newExtension}`}`;
+      if (!nextExtension) return extension;
+      return `${extension}${nextExtension.startsWith('.') ? nextExtension : `.${nextExtension}`}`;
     case 'remove':
       return '';
     case 'lowercase':
@@ -588,8 +606,10 @@ const processFileName = (
   }
   
   const newName = `${name}${extension}`;
+  const trimmedName = name.trim();
   
   // Validate filename
+  // eslint-disable-next-line no-control-regex
   const invalidChars = /[<>:"/\\|?*\x00-\x1f]/g;
   if (invalidChars.test(newName)) {
     return {
@@ -599,11 +619,36 @@ const processFileName = (
     };
   }
   
-  if (!name.trim()) {
+  if (!trimmedName) {
     return {
       newName,
       isValid: false,
       errorMessage: 'Filename cannot be empty',
+    };
+  }
+
+  if (/[. ]$/.test(name)) {
+    return {
+      newName,
+      isValid: false,
+      errorMessage: 'Filename cannot end with a space or period',
+    };
+  }
+
+  const reservedNames = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+  if (reservedNames.test(trimmedName)) {
+    return {
+      newName,
+      isValid: false,
+      errorMessage: 'Filename uses a reserved Windows device name',
+    };
+  }
+
+  if (newName.length > 255) {
+    return {
+      newName,
+      isValid: false,
+      errorMessage: 'Filename is longer than 255 characters',
     };
   }
   
@@ -615,14 +660,23 @@ const processFileName = (
  * Trims future history when making new changes after an undo.
  * Maintains maximum history length by removing oldest entries.
  */
-const pushToHistory = (get: () => AppState, set: (partial: Partial<AppState>) => void) => {
-  const { history, historyIndex, maxHistoryLength, operations } = get();
+const commitOperations = (
+  nextOperations: Operation[],
+  get: () => AppState,
+  set: (partial: Partial<AppState>) => void
+) => {
+  const { history, historyIndex, maxHistoryLength } = get();
   
   // Trim future history if we've undone and are making new changes
   const newHistory = history.slice(0, historyIndex + 1);
+  const previousSnapshot = newHistory[newHistory.length - 1] || [];
+
+  if (JSON.stringify(previousSnapshot) === JSON.stringify(nextOperations)) {
+    set({ operations: nextOperations });
+    return;
+  }
   
-  // Add current operations to history
-  newHistory.push(operations.map(op => ({ ...op, config: { ...op.config } })));
+  newHistory.push(cloneOperations(nextOperations));
   
   // Trim old history if needed
   while (newHistory.length > maxHistoryLength) {
@@ -630,6 +684,7 @@ const pushToHistory = (get: () => AppState, set: (partial: Partial<AppState>) =>
   }
   
   set({ 
+    operations: nextOperations,
     history: newHistory,
     historyIndex: newHistory.length - 1
   });
@@ -651,10 +706,10 @@ export const useStore = create<AppState>()(
       
       addFiles: (newFiles: File[]) => {
         const files = get().files;
-        const existingNames = new Set(files.map(f => f.originalName));
+        const existingSourceKeys = new Set(files.map(f => getFileSourceKey(f.originalFile)));
         
         const newFileItems: FileItem[] = newFiles
-          .filter(f => !existingNames.has(f.name))
+          .filter(file => !existingSourceKeys.has(getFileSourceKey(file)))
           .map(file => {
             const lastDotIndex = file.name.lastIndexOf('.');
             const extension = lastDotIndex > 0 ? file.name.substring(lastDotIndex) : '';
@@ -691,63 +746,54 @@ export const useStore = create<AppState>()(
       },
       
       addOperation: (type: OperationType) => {
-        pushToHistory(get, set);
         const newOperation: Operation = {
           id: generateId(),
           type,
           enabled: true,
           config: getDefaultConfig(type),
         };
-        set({ operations: [...get().operations, newOperation] });
+        commitOperations([...get().operations, newOperation], get, set);
         get().processFiles();
       },
       
       updateOperation: (id: string, configUpdate: Partial<OperationConfig>) => {
-        pushToHistory(get, set);
-        set({
-          operations: get().operations.map(op =>
-            op.id === id
-              ? { ...op, config: { ...op.config, ...configUpdate } as OperationConfig }
-              : op
-          ) as Operation[],
-        });
+        const nextOperations = get().operations.map(op =>
+          op.id === id
+            ? { ...op, config: { ...op.config, ...configUpdate } as OperationConfig }
+            : op
+        ) as Operation[];
+        commitOperations(nextOperations, get, set);
         get().processFiles();
       },
       
       removeOperation: (id: string) => {
-        pushToHistory(get, set);
-        set({ operations: get().operations.filter(op => op.id !== id) });
+        commitOperations(get().operations.filter(op => op.id !== id), get, set);
         get().processFiles();
       },
       
       toggleOperation: (id: string) => {
-        pushToHistory(get, set);
-        set({
-          operations: get().operations.map(op =>
-            op.id === id ? { ...op, enabled: !op.enabled } : op
-          ),
-        });
+        const nextOperations = get().operations.map(op =>
+          op.id === id ? { ...op, enabled: !op.enabled } : op
+        );
+        commitOperations(nextOperations, get, set);
         get().processFiles();
       },
       
       reorderOperations: (startIndex: number, endIndex: number) => {
-        pushToHistory(get, set);
         const ops = [...get().operations];
         const [removed] = ops.splice(startIndex, 1);
         ops.splice(endIndex, 0, removed);
-        set({ operations: ops });
+        commitOperations(ops, get, set);
         get().processFiles();
       },
       
       clearOperations: () => {
-        pushToHistory(get, set);
-        set({ operations: [] });
+        commitOperations([], get, set);
         get().processFiles();
       },
       
       applyPreset: (preset: Preset) => {
-        pushToHistory(get, set);
-        set({ operations: [...preset.operations] });
+        commitOperations(cloneOperations(preset.operations), get, set);
         get().processFiles();
       },
       
@@ -791,12 +837,15 @@ export const useStore = create<AppState>()(
         // Check for duplicates
         const nameCount = new Map<string, number>();
         for (const file of processedFiles) {
-          const count = nameCount.get(file.newName) || 0;
-          nameCount.set(file.newName, count + 1);
+          if (!file.isValid) continue;
+          const normalizedName = file.newName.toLocaleLowerCase();
+          const count = nameCount.get(normalizedName) || 0;
+          nameCount.set(normalizedName, count + 1);
         }
         
         const finalFiles = processedFiles.map(file => {
-          if ((nameCount.get(file.newName) || 0) > 1) {
+          const normalizedName = file.newName.toLocaleLowerCase();
+          if (file.isValid && (nameCount.get(normalizedName) || 0) > 1) {
             return {
               ...file,
               isValid: false,
@@ -814,7 +863,7 @@ export const useStore = create<AppState>()(
         const { historyIndex, history } = get();
         if (historyIndex > 0) {
           const newIndex = historyIndex - 1;
-          const previousOperations = history[newIndex].map(op => ({ ...op, config: { ...op.config } }));
+          const previousOperations = cloneOperations(history[newIndex]);
           set({ 
             operations: previousOperations,
             historyIndex: newIndex
@@ -827,7 +876,7 @@ export const useStore = create<AppState>()(
         const { historyIndex, history } = get();
         if (historyIndex < history.length - 1) {
           const newIndex = historyIndex + 1;
-          const nextOperations = history[newIndex].map(op => ({ ...op, config: { ...op.config } }));
+          const nextOperations = cloneOperations(history[newIndex]);
           set({ 
             operations: nextOperations,
             historyIndex: newIndex

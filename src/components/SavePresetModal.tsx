@@ -6,7 +6,7 @@
  * Presets are persisted to localStorage via Zustand persist middleware.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Save, X, Hash, Calendar, Sparkles, Music, Tv, CaseLower, ArrowRightLeft, Folder, FileCode, Image } from 'lucide-react';
 import { useStore } from '../store';
 
@@ -34,6 +34,19 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
   const [selectedIcon, setSelectedIcon] = useState('folder');
   const saveCustomPreset = useStore(state => state.saveCustomPreset);
   const operations = useStore(state => state.operations);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   
   if (!isOpen) return null;
   
@@ -47,13 +60,20 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
   };
   
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="glass-card p-6 w-full max-w-md shadow-2xl animate-slide-up">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm animate-fade-in"
+      onMouseDown={onClose}
+    >
+      <div
+        className="modal-panel w-full max-w-md p-6 shadow-2xl animate-slide-up"
+        onMouseDown={event => event.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-white">Save as Preset</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-dark-700 text-dark-400 hover:text-white transition-colors"
+            className="icon-button"
+            aria-label="Close preset dialog"
           >
             <X className="w-5 h-5" />
           </button>
@@ -92,10 +112,10 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
                   key={opt.id}
                   onClick={() => setSelectedIcon(opt.id)}
                   className={`
-                    p-2.5 rounded-lg border transition-all duration-200 flex items-center justify-center
+                    p-2.5 rounded-md border transition-all duration-200 flex items-center justify-center
                     ${selectedIcon === opt.id 
-                      ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400' 
-                      : 'border-dark-700/50 bg-dark-800/50 text-dark-400 hover:border-dark-600 hover:text-dark-300'
+                      ? 'border-cyan-300/60 bg-cyan-300/10 text-cyan-200' 
+                      : 'border-white/10 bg-white/[0.04] text-white/45 hover:border-white/20 hover:text-white/75'
                     }
                   `}
                   title={opt.label}
@@ -106,13 +126,13 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
             </div>
           </div>
           
-          <div className="p-3 bg-dark-800/50 rounded-lg border border-dark-700/30">
-            <p className="text-xs text-dark-400 mb-2">Operations to save:</p>
+          <div className="rounded-md border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs text-white/50 mb-2">Operations to save:</p>
             <div className="flex flex-wrap gap-1">
               {operations.map((op, i) => (
                 <span 
                   key={op.id} 
-                  className={`text-xs px-2 py-0.5 rounded ${op.enabled ? 'bg-cyan-500/20 text-cyan-400' : 'bg-dark-700 text-dark-400'}`}
+                  className={`rounded px-2 py-0.5 text-xs ${op.enabled ? 'bg-cyan-300/15 text-cyan-200' : 'bg-white/[0.06] text-white/40'}`}
                 >
                   {i + 1}. {op.type}
                 </span>

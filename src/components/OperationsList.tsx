@@ -602,9 +602,9 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
       ref={setNodeRef}
       style={style}
       className={`
-        operation-card glass-card p-5 border transition-all
-        ${operation.enabled ? 'border-dark-700/50' : 'border-dark-700/30 opacity-60'}
-        ${isDragging ? 'shadow-lg shadow-cyan-500/20 border-cyan-500/30' : ''}
+        operation-card p-4
+        ${operation.enabled ? '' : 'opacity-60'}
+        ${isDragging ? 'is-dragging' : ''}
       `}
     >
       {/* Header */}
@@ -617,7 +617,7 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
           <GripVertical className="w-4 h-4" />
         </div>
         
-        <span className="w-6 h-6 text-xs font-bold rounded bg-dark-700/50 flex items-center justify-center text-dark-300">
+        <span className="w-6 h-6 text-xs font-bold rounded-md bg-white/[0.06] flex items-center justify-center text-white/60">
           {index + 1}
         </span>
         
@@ -632,10 +632,10 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
         <Tooltip text={operation.enabled ? 'Disable operation' : 'Enable operation'}>
           <button
             onClick={() => toggleOperation(operation.id)}
-            className={`p-1.5 rounded transition-colors ${
+            className={`p-1.5 rounded-md transition-colors ${
               operation.enabled 
-                ? 'text-cyan-400 hover:bg-cyan-400/10' 
-                : 'text-dark-500 hover:bg-dark-700'
+                ? 'text-cyan-300 hover:bg-cyan-300/10' 
+                : 'text-white/35 hover:bg-white/[0.06]'
             }`}
             aria-label={operation.enabled ? 'Disable operation' : 'Enable operation'}
           >
@@ -646,7 +646,7 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
         <Tooltip text={isExpanded ? 'Collapse settings' : 'Expand settings'}>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 rounded text-dark-400 hover:bg-dark-700 transition-colors"
+            className="p-1.5 rounded-md text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -656,7 +656,7 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
         <Tooltip text="Remove operation">
           <button
             onClick={() => removeOperation(operation.id)}
-            className="p-1.5 rounded text-dark-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-md text-white/50 hover:bg-red-500/10 hover:text-red-300 transition-colors"
             aria-label="Remove operation"
           >
             <X className="w-4 h-4" />
@@ -666,7 +666,7 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
       
       {/* Config */}
       {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-dark-700/50">
+        <div className="mt-4 pt-4 border-t border-white/10">
           {renderConfig()}
         </div>
       )}
@@ -695,17 +695,17 @@ export function OperationsList() {
     if (over && active.id !== over.id) {
       const oldIndex = operations.findIndex(op => op.id === active.id);
       const newIndex = operations.findIndex(op => op.id === over.id);
-      reorderOperations(oldIndex, newIndex);
+      if (oldIndex >= 0 && newIndex >= 0) {
+        reorderOperations(oldIndex, newIndex);
+      }
     }
   };
   
   if (operations.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-dark-400">No operations added yet</p>
-        <p className="text-sm text-dark-500 mt-1">
-          Add operations below or select a preset
-        </p>
+      <div className="operation-empty">
+        <p>No operations added</p>
+        <span>Preset or custom chain</span>
       </div>
     );
   }

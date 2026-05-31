@@ -238,26 +238,26 @@ export function FileList() {
     if (over && active.id !== over.id) {
       const oldIndex = files.findIndex(f => f.id === active.id);
       const newIndex = files.findIndex(f => f.id === over.id);
-      reorderFiles(oldIndex, newIndex);
+      if (oldIndex >= 0 && newIndex >= 0) {
+        reorderFiles(oldIndex, newIndex);
+      }
     }
   };
   
   if (files.length === 0) {
     return (
-      <div className="glass-card p-5 flex flex-col" style={{ height: '650px' }}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">
-            Files (0)
-          </h2>
+      <section className="panel p-5 flex min-h-[360px] flex-col">
+        <div className="section-heading mb-4">
+          <h2>Files (0)</h2>
         </div>
         <div className="flex items-center justify-center py-8 flex-1">
-          <div className="text-center text-dark-500">
+          <div className="text-center text-white/45">
             <File className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No files loaded</p>
-            <p className="text-xs mt-1">Drag and drop files above to get started</p>
+            <p className="text-sm text-white/65">No files loaded</p>
+            <p className="text-xs mt-1">Import files to begin</p>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
   
@@ -294,25 +294,25 @@ export function FileList() {
   }
   
   return (
-    <div className="glass-card p-5 flex flex-col" style={panelStyle}>
+    <section className="panel p-5 flex flex-col" style={panelStyle}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="section-heading mb-4">
         <div className="flex items-center gap-4 flex-wrap">
-          <h2 className="text-lg font-semibold text-white">
+          <h2>
             Files ({files.length})
           </h2>
           {changedCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-cyan-500/20 text-cyan-400">
-              {changedCount} will be renamed
+            <span className="count-pill">
+              {changedCount} queued
             </span>
           )}
           {duplicateCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400">
+            <span className="count-pill warning">
               {duplicateCount} duplicates
             </span>
           )}
           {errorCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400">
+            <span className="count-pill danger">
               {errorCount} errors
             </span>
           )}
@@ -320,7 +320,7 @@ export function FileList() {
         
         <button
           onClick={clearFiles}
-          className="text-sm text-dark-400 hover:text-red-400 transition-colors"
+          className="text-sm font-medium text-white/45 transition-colors hover:text-red-300"
         >
           Clear all
         </button>
@@ -347,6 +347,6 @@ export function FileList() {
           </div>
         </SortableContext>
       </DndContext>
-    </div>
+    </section>
   );
 }

@@ -18,7 +18,8 @@ import {
   Folder,
   Zap,
   FileCode,
-  Image
+  Image,
+  X
 } from 'lucide-react';
 import { useStore } from '../store';
 import type { Preset } from '../types';
@@ -67,15 +68,11 @@ function PresetButton({ preset, isCustom }: PresetButtonProps) {
           ${isActive ? 'active' : ''}
         `}
       >
-        {/* Hover gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Icon with glow */}
         <span className={`
-          relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300
+          relative flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200
           ${isActive 
-            ? 'bg-cyan-500/20 text-cyan-400' 
-            : 'bg-dark-700/50 text-dark-400 group-hover:bg-cyan-500/10 group-hover:text-cyan-400'
+            ? 'bg-cyan-400/15 text-cyan-200' 
+            : 'bg-white/[0.04] text-white/45 group-hover:bg-white/[0.07] group-hover:text-cyan-200'
           }
         `}>
           {icon}
@@ -86,10 +83,9 @@ function PresetButton({ preset, isCustom }: PresetButtonProps) {
           <p className="text-xs text-dark-500 truncate group-hover:text-dark-400 transition-colors">{preset.description}</p>
         </div>
         
-        {/* Active indicator */}
         {isActive && (
           <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-cyan-300" />
           </div>
         )}
       </button>
@@ -100,12 +96,10 @@ function PresetButton({ preset, isCustom }: PresetButtonProps) {
             e.stopPropagation();
             deleteCustomPreset(preset.id);
           }}
-          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs
-            opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center
-            shadow-lg shadow-red-500/30 hover:scale-110"
+          className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-red-300/30 bg-red-500 text-white opacity-0 shadow-lg shadow-red-950/40 transition-all duration-200 hover:bg-red-400 group-hover:opacity-100"
           aria-label="Delete preset"
         >
-          ×
+          <X className="h-3 w-3" />
         </button>
       )}
     </div>
@@ -117,10 +111,12 @@ export function PresetList() {
   const customPresets = useStore(state => state.customPresets);
   
   return (
-    <div className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Zap className="w-5 h-5 text-cyan-400" />
-        <h2 className="text-lg font-semibold text-white">Quick Presets</h2>
+    <section className="panel p-5">
+      <div className="section-heading mb-4">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-amber-300" />
+          <h2>Quick Presets</h2>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 gap-2">
@@ -131,7 +127,7 @@ export function PresetList() {
       
       {customPresets.length > 0 && (
         <>
-          <h3 className="text-sm font-medium text-dark-300 mt-4 mb-2">Custom Presets</h3>
+          <h3 className="text-sm font-medium text-white/70 mt-4 mb-2">Custom Presets</h3>
           <div className="grid grid-cols-1 gap-2">
             {customPresets.map(preset => (
               <PresetButton key={preset.id} preset={preset} isCustom />
@@ -139,6 +135,6 @@ export function PresetList() {
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

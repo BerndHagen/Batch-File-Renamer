@@ -12,11 +12,10 @@ import { Header, Footer } from './Layout';
 
 export function HelpPage() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #0a0f1a 0%, #0d1424 100%)' }}>
-      {/* Background */}
-      <div className="bg-particles" />
-      <div className="side-glow side-glow-left" />
-      <div className="side-glow side-glow-right" />
+    <div className="app-shell min-h-screen flex flex-col">
+      <div className="ambient-grid" />
+      <div className="ambient-beam ambient-beam-a" />
+      <div className="ambient-beam ambient-beam-b" />
       
       <Header />
       
@@ -160,7 +159,7 @@ export function HelpPage() {
                 <div>
                   <h3 className="font-medium text-white mb-1">Advanced Mode</h3>
                   <p className="text-dark-400">
-                    Click the lightning bolt icon (⚡) to toggle Advanced Mode. This reveals
+                    Click the lightning bolt icon to toggle Advanced Mode. This reveals
                     power-user operations like Regex and Remove Characters.
                   </p>
                 </div>

@@ -12,11 +12,10 @@ import { Header, Footer } from './Layout';
 
 export function LicensePage() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #0a0f1a 0%, #0d1424 100%)' }}>
-      {/* Background */}
-      <div className="bg-particles" />
-      <div className="side-glow side-glow-left" />
-      <div className="side-glow side-glow-right" />
+    <div className="app-shell min-h-screen flex flex-col">
+      <div className="ambient-grid" />
+      <div className="ambient-beam ambient-beam-a" />
+      <div className="ambient-beam ambient-beam-b" />
       
       <Header />
 
@@ -107,7 +106,7 @@ SOFTWARE.`}
             </p>
             <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700/50">
               <code className="text-cyan-400 text-sm">
-                Batch File Renamer © 2026 Bernd Hagen - MIT License
+                Batch File Renamer (c) 2026 Bernd Hagen - MIT License
               </code>
             </div>
           </div>

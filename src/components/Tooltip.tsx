@@ -1,9 +1,5 @@
 /**
- * Tooltip.tsx - Reusable Tooltip Component
- * 
- * Portal-based tooltip that renders to document.body to avoid
- * overflow and z-index issues. Supports four positions: top, bottom,
- * left, right. Calculates position dynamically based on trigger element.
+ * Portal tooltip used by compact icon controls.
  */
 
 import { ReactNode, useState, useRef, useEffect } from 'react';

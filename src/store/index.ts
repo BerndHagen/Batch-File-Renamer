@@ -1,15 +1,6 @@
 /**
- * store/index.ts - Global State Management
- * 
- * Zustand store managing the entire application state including:
- * - File list with original/new names and validation status
- * - Rename operations pipeline with full configuration
- * - Built-in and custom presets for quick operation loading
- * - Undo/redo history (up to 50 states)
- * - Advanced mode toggle for power users
- * 
- * Uses persist middleware to save custom presets and preferences to localStorage.
- * All rename operations are processed client-side with live preview.
+ * Global Zustand store for files, rename operations, presets, and undo history.
+ * Only custom presets and preferences are persisted; imported files stay in memory.
  */
 
 import { create } from 'zustand';
@@ -33,7 +24,6 @@ import type {
   CaseType
 } from '../types';
 
-/** Generates a unique 9-character alphanumeric ID */
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
 const cloneOperations = (operations: Operation[]): Operation[] =>
@@ -51,7 +41,6 @@ const getFileSourceKey = (file: File) => {
   ].join('|');
 };
 
-// Default presets defined inline
 const defaultPresets: Preset[] = [
   {
     id: 'number-files',
@@ -699,7 +688,6 @@ export const useStore = create<AppState>()(
       customPresets: [],
       showAdvanced: false,
       
-      // History state
       history: [[]],
       historyIndex: 0,
       maxHistoryLength: 50,
@@ -875,7 +863,6 @@ export const useStore = create<AppState>()(
         set({ files: finalFiles });
       },
       
-      // Undo/Redo functions
       undo: () => {
         const { historyIndex, history } = get();
         if (historyIndex > 0) {

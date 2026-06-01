@@ -1,10 +1,5 @@
 /**
- * PresetList.tsx - Preset Selection Panel
- * 
- * Displays built-in and custom presets for quick operation loading.
- * Built-in presets include: Number Files, Date Prefix, Clean Filenames,
- * Music Files, Episode Format, Lowercase All, and Replace Spaces.
- * Custom presets can be created and deleted; built-in presets are permanent.
+ * Preset picker for built-in and saved operation chains.
  */
 
 import { 
@@ -47,13 +42,11 @@ function PresetButton({ preset, isCustom }: PresetButtonProps) {
   const deleteCustomPreset = useStore(state => state.deleteCustomPreset);
   const operations = useStore(state => state.operations);
   
-  // Check if this preset is currently active (compare type, enabled AND config)
   const isActive = operations.length > 0 && 
     preset.operations.length === operations.length &&
     preset.operations.every((pOp, i) => {
       const op = operations[i];
       if (!op || op.type !== pOp.type || op.enabled !== pOp.enabled) return false;
-      // Deep compare config
       return JSON.stringify(op.config) === JSON.stringify(pOp.config);
     });
   

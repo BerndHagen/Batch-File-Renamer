@@ -1,11 +1,3 @@
-/**
- * main.tsx - Application Entry Point
- * 
- * Bootstraps the React application with HashRouter for GitHub Pages
- * compatibility. Sets up the routing structure for the main app,
- * help page, and license page.
- */
-
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, Routes, Route } from 'react-router-dom'

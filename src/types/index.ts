@@ -1,12 +1,5 @@
 /**
- * types/index.ts - TypeScript Type Definitions
- * 
- * Contains all type definitions and interfaces for the application:
- * - FileItem: Represents a file in the rename queue with validation
- * - OperationType: Union of all supported rename operation types
- * - Operation configs: Detailed settings for each operation type
- * - Preset: Saved operation combinations with metadata
- * - AppState: Complete application state interface with actions
+ * Shared types for files, rename operations, presets, and store actions.
  */
 
 export interface FileItem {
@@ -132,12 +125,10 @@ export interface AppState {
   customPresets: Preset[];
   showAdvanced: boolean;
   
-  // History for undo/redo
   history: Operation[][];
   historyIndex: number;
   maxHistoryLength: number;
   
-  // Actions
   addFiles: (files: File[]) => void;
   removeFile: (id: string) => void;
   clearFiles: () => void;
@@ -158,7 +149,6 @@ export interface AppState {
   
   setShowAdvanced: (show: boolean) => void;
   
-  // Undo/Redo
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;

@@ -1,9 +1,5 @@
 /**
- * LicensePage.tsx - MIT License Display
- * 
- * Displays the MIT license under which the project is released.
- * Shows what users are permitted to do with the software and
- * provides the full license text with attribution requirements.
+ * MIT license page with the full license text and attribution details.
  */
 
 import { ArrowLeft, FileText, Scale, Check } from 'lucide-react';
@@ -17,7 +13,6 @@ export function LicensePage() {
 
       <main className="flex-1 relative z-10">
         <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-dark-400 hover:text-signal transition-colors mb-8 group"
@@ -26,7 +21,6 @@ export function LicensePage() {
             <span>Back to Batch File Renamer</span>
           </Link>
 
-          {/* Page Title */}
           <div className="mb-10">
             <h1 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-3">
               <Scale className="w-6 h-6 text-signal" />
@@ -37,7 +31,6 @@ export function LicensePage() {
             </p>
           </div>
 
-          {/* What MIT License Allows */}
           <div className="glass-card p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-signal" />
@@ -60,7 +53,6 @@ export function LicensePage() {
             </div>
           </div>
 
-          {/* License Text */}
           <div className="glass-card p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Scale className="w-5 h-5 text-signal" />
@@ -93,7 +85,6 @@ SOFTWARE.`}
             </div>
           </div>
 
-          {/* Attribution Section */}
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Attribution</h2>
             <p className="text-dark-400 mb-4">

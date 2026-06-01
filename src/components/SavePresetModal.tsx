@@ -1,9 +1,5 @@
 /**
- * SavePresetModal.tsx - Custom Preset Creation Modal
- * 
- * Modal dialog for saving current operations as a custom preset.
- * Allows setting preset name, description, and icon selection.
- * Presets are persisted to localStorage via Zustand persist middleware.
+ * Dialog for saving the current operation chain as a custom preset.
  */
 
 import { useEffect, useState } from 'react';
@@ -103,7 +99,6 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
             />
           </div>
           
-          {/* Icon Selection */}
           <div>
             <label className="block text-sm text-dark-300 mb-2">Choose Icon</label>
             <div className="grid grid-cols-5 gap-2">

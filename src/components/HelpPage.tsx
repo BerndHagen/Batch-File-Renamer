@@ -1,9 +1,5 @@
 /**
- * HelpPage.tsx - User Documentation Page
- * 
- * Comprehensive help documentation explaining how to use the app.
- * Covers getting started, available operations, presets, tips,
- * keyboard shortcuts, and export information.
+ * Help page with usage steps, operation notes, shortcuts, and export behavior.
  */
 
 import { ArrowLeft, Settings2, Zap, Download, FolderInput, MousePointer, Keyboard, HelpCircle } from 'lucide-react';
@@ -17,7 +13,6 @@ export function HelpPage() {
 
       <main className="flex-1 relative z-10">
         <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-dark-400 hover:text-signal transition-colors mb-8 group"
@@ -26,7 +21,6 @@ export function HelpPage() {
             <span>Back to Batch File Renamer</span>
           </Link>
 
-          {/* Page Title */}
           <div className="mb-10">
             <h1 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-3">
               <HelpCircle className="w-6 h-6 text-signal" />
@@ -35,9 +29,7 @@ export function HelpPage() {
             <p className="text-dark-400">Learn how to use Batch File Renamer to efficiently rename your files.</p>
           </div>
           
-          {/* Content Grid */}
           <div className="grid gap-8 lg:grid-cols-2">
-            {/* Getting Started */}
             <section className="glass-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <FolderInput className="w-6 h-6 text-signal" />
@@ -57,7 +49,6 @@ export function HelpPage() {
               </div>
             </section>
             
-            {/* Operations */}
             <section className="glass-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Settings2 className="w-6 h-6 text-signal" />
@@ -107,7 +98,6 @@ export function HelpPage() {
               </div>
             </section>
             
-            {/* Presets */}
             <section className="glass-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Zap className="w-6 h-6 text-signal" />
@@ -153,7 +143,6 @@ export function HelpPage() {
               </div>
             </section>
             
-            {/* Tips & Features */}
             <section className="glass-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <MousePointer className="w-6 h-6 text-signal" />
@@ -205,7 +194,6 @@ export function HelpPage() {
               </div>
             </section>
             
-            {/* Keyboard Shortcuts */}
             <section className="glass-card p-6 lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
                 <Keyboard className="w-6 h-6 text-signal" />
@@ -227,7 +215,6 @@ export function HelpPage() {
               </div>
             </section>
             
-            {/* Export Info */}
             <section className="glass-card p-6 lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
                 <Download className="w-6 h-6 text-signal" />

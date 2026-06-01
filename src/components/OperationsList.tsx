@@ -1,10 +1,5 @@
 /**
- * OperationsList.tsx - Operations Pipeline Display
- * 
- * Renders the list of active rename operations with full configuration forms.
- * Supports drag-and-drop reordering, enable/disable toggling, and removal.
- * Each operation type has its own specialized configuration panel.
- * Uses @dnd-kit for accessible drag-and-drop functionality.
+ * Operation pipeline with drag reordering and per-operation settings.
  */
 
 import { useState } from 'react';
@@ -607,7 +602,6 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
         ${isDragging ? 'is-dragging' : ''}
       `}
     >
-      {/* Header */}
       <div className="flex items-center gap-3">
         <div
           {...attributes}
@@ -664,7 +658,6 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
         </Tooltip>
       </div>
 
-      {/* Config */}
       {isExpanded && (
         <div className="mt-4 pt-4 border-t border-dark-700 animate-fade-in">
           {renderConfig()}

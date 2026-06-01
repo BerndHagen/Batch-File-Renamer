@@ -1,13 +1,6 @@
 /**
- * AddOperationButton.tsx - Operation Selector Dropdown
- *
- * Provides a dropdown menu to add new rename operations to the pipeline.
- * Filters operations based on Advanced Mode setting - basic operations are
- * always visible, while Regex and Remove Chars are hidden in beginner mode.
- *
- * The menu is rendered through a portal with fixed positioning so it can
- * never be clipped by an ancestor panel's overflow, and it flips above the
- * button automatically when there isn't enough room below.
+ * Dropdown for adding rename operations to the pipeline.
+ * Advanced operations stay hidden until advanced mode is enabled.
  */
 
 import {
@@ -77,7 +70,6 @@ export function AddOperationButton() {
     const rect = button.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
     const spaceAbove = rect.top - VIEWPORT_MARGIN;
-    // Open upward only when there's clearly more room above.
     const openUp = spaceBelow < 280 && spaceAbove > spaceBelow;
 
     setPos({

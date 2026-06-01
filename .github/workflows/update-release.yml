@@ -11,10 +11,8 @@ permissions:
   contents: write
 
 jobs:
-  # ──────────────────────────────────────────────────────────────
-  # Job 1: "latest" release — updated on every push to main
+  # Latest release: updated on every push to main.
   # Always overwrites the same "latest" tag and release
-  # ──────────────────────────────────────────────────────────────
   latest:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -85,7 +83,7 @@ jobs:
                 CAT="OTHER" ;;
             esac
             
-            BULLETS=$(echo "$BODY" | grep -E '^\s*[-*•]\s+' | sed 's/^[[:space:]]*[-*•][[:space:]]*//' || true)
+            BULLETS=$(echo "$BODY" | grep -E '^\s*[-*]\s+' | sed 's/^[[:space:]]*[-*][[:space:]]*//' || true)
             
             if [ -n "$BULLETS" ]; then
               while IFS= read -r item; do
@@ -107,10 +105,10 @@ jobs:
               [ -z "$text" ] && continue
               text="$(echo "${text:0:1}" | tr '[:lower:]' '[:upper:]')${text:1}"
               case "$category" in
-                FEAT) FEATURES="${FEATURES}\n• \u2800${text}" ;;
-                FIX) FIXES="${FIXES}\n• \u2800${text}" ;;
-                MAINT) MAINTENANCE="${MAINTENANCE}\n• \u2800${text}" ;;
-                OTHER) OTHER="${OTHER}\n• \u2800${text}" ;;
+                FEAT) FEATURES="${FEATURES}\n- ${text}" ;;
+                FIX) FIXES="${FIXES}\n- ${text}" ;;
+                MAINT) MAINTENANCE="${MAINTENANCE}\n- ${text}" ;;
+                OTHER) OTHER="${OTHER}\n- ${text}" ;;
               esac
             done < "$ITEMS_FILE"
           fi
@@ -119,11 +117,11 @@ jobs:
           
           {
             echo "body<<EOFMARKER"
-            echo "> **⚠️ This is a rolling release that always contains the latest build from \`main\`.**"
+            echo "> **Note:** This is a rolling release that always contains the latest build from \`main\`."
             echo "> It is automatically updated on every push. For stable versions, use a [versioned release](https://github.com/BerndHagen/Batch-File-Renamer/releases)."
             echo ""
             echo "**Last updated:** ${RELEASE_DATE}"
-            echo "**Commit:** \`${COMMIT_SHA}\` — ${COMMIT_MSG}"
+            echo "**Commit:** \`${COMMIT_SHA}\` - ${COMMIT_MSG}"
             echo "**Changes:** ${SINCE_TEXT}"
             echo ""
             
@@ -164,15 +162,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Latest Build"
+          name: "Batch File Renamer - Latest Build"
           body: ${{ steps.notes.outputs.body }}
           prerelease: true
           files: batch-file-renamer-latest.zip
 
-  # ──────────────────────────────────────────────────────────────
-  # Job 2: Versioned release — only when a tag like v1.0.0 is pushed
+  # Versioned release: only when a tag like v1.1.0 is pushed.
   # These releases are permanent and represent stable milestones
-  # ──────────────────────────────────────────────────────────────
   versioned:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -245,7 +241,7 @@ jobs:
                 CAT="OTHER" ;;
             esac
             
-            BULLETS=$(echo "$BODY" | grep -E '^\s*[-*•]\s+' | sed 's/^[[:space:]]*[-*•][[:space:]]*//' || true)
+            BULLETS=$(echo "$BODY" | grep -E '^\s*[-*]\s+' | sed 's/^[[:space:]]*[-*][[:space:]]*//' || true)
             
             if [ -n "$BULLETS" ]; then
               while IFS= read -r item; do
@@ -267,18 +263,18 @@ jobs:
               [ -z "$text" ] && continue
               text="$(echo "${text:0:1}" | tr '[:lower:]' '[:upper:]')${text:1}"
               case "$category" in
-                FEAT) FEATURES="${FEATURES}\n• \u2800${text}" ;;
-                FIX) FIXES="${FIXES}\n• \u2800${text}" ;;
-                MAINT) MAINTENANCE="${MAINTENANCE}\n• \u2800${text}" ;;
-                OTHER) OTHER="${OTHER}\n• \u2800${text}" ;;
+                FEAT) FEATURES="${FEATURES}\n- ${text}" ;;
+                FIX) FIXES="${FIXES}\n- ${text}" ;;
+                MAINT) MAINTENANCE="${MAINTENANCE}\n- ${text}" ;;
+                OTHER) OTHER="${OTHER}\n- ${text}" ;;
               esac
             done < "$ITEMS_FILE"
           fi
           
           rm -f "$ITEMS_FILE"
           
-          FEAT_COUNT=$(echo -e "$FEATURES" | grep -c "•" || true)
-          FIX_COUNT=$(echo -e "$FIXES" | grep -c "•" || true)
+          FEAT_COUNT=$(echo -e "$FEATURES" | grep -c "^- " || true)
+          FIX_COUNT=$(echo -e "$FIXES" | grep -c "^- " || true)
           
           SUMMARY="Release of Batch File Renamer with"
           PARTS=""
@@ -333,6 +329,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
+          name: Batch File Renamer ${{ steps.version.outputs.tag }}
           body: ${{ steps.notes.outputs.body }}
           files: batch-file-renamer-${{ steps.version.outputs.tag }}.zip

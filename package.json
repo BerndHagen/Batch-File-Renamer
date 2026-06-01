@@ -1,7 +1,7 @@
 {
   "name": "batch-file-renamer",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Modern, user-friendly batch file renaming tool with live preview",
   "type": "module",
   "scripts": {

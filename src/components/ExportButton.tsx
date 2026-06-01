@@ -56,14 +56,18 @@ export function ExportButton() {
   const files = useStore(state => state.files);
   const operations = useStore(state => state.operations);
 
-  const invalidCount = files.filter(f => !f.isValid).length;
-  const changedFiles = files.filter(f => f.isValid && f.originalName !== f.newName);
-  const exportFiles = files.filter(f => f.isValid);
+  const selectedFiles = files.filter(file => file.selected);
+  const invalidCount = selectedFiles.filter(file => !file.isValid).length;
+  const changedFiles = selectedFiles.filter(file => file.isValid && file.originalName !== file.newName);
+  const exportFiles = selectedFiles.filter(file => file.isValid);
   const canExport = changedFiles.length > 0 && invalidCount === 0;
 
   const getButtonText = () => {
     if (files.length === 0) {
       return 'Import Files';
+    }
+    if (selectedFiles.length === 0) {
+      return 'Select Files';
     }
     if (operations.length === 0) {
       return 'Add Operations';
@@ -74,7 +78,7 @@ export function ExportButton() {
     if (changedFiles.length === 0) {
       return 'No Changes';
     }
-    return `Download ${exportFiles.length} Files`;
+    return `Export ${exportFiles.length} Files`;
   };
 
   const handleExport = async () => {
@@ -133,6 +137,14 @@ export function ExportButton() {
     }
   };
 
+  const buttonText = isExporting
+    ? 'Creating ZIP'
+    : exportResult === 'success'
+      ? 'Exported'
+      : exportResult === 'error'
+        ? 'Export Failed'
+        : getButtonText();
+
   return (
     <button
       onClick={handleExport}
@@ -148,15 +160,7 @@ export function ExportButton() {
       ) : (
         <Download className="w-5 h-5" />
       )}
-      <span>
-        {isExporting
-          ? 'Creating ZIP'
-          : exportResult === 'success'
-            ? 'Downloaded'
-            : exportResult === 'error'
-              ? 'Export Failed'
-              : getButtonText()}
-      </span>
+      <span>{buttonText}</span>
     </button>
   );
 }

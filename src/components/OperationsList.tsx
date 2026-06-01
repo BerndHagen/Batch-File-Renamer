@@ -598,75 +598,75 @@ function SortableOperationCard({ operation, index }: OperationCardProps) {
   };
   
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
       className={`
         operation-card p-4
-        ${operation.enabled ? '' : 'opacity-60'}
+        ${operation.enabled ? 'rail' : 'opacity-55'}
         ${isDragging ? 'is-dragging' : ''}
       `}
     >
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div 
+        <div
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-dark-500 hover:text-cyan-400 transition-colors touch-none"
+          className="cursor-grab active:cursor-grabbing text-dark-500 hover:text-signal transition-colors touch-none"
         >
           <GripVertical className="w-4 h-4" />
         </div>
-        
-        <span className="w-6 h-6 text-xs font-bold rounded-md bg-white/[0.06] flex items-center justify-center text-white/60">
+
+        <span className="w-6 h-6 text-xs font-mono tabular-nums rounded-md bg-dark-950 border border-dark-700 flex items-center justify-center text-dark-300">
           {index + 1}
         </span>
-        
-        <div className={info.color}>
+
+        <div className={operation.enabled ? 'text-signal' : 'text-dark-400'}>
           {info.icon}
         </div>
-        
-        <span className="font-medium text-white flex-1">
+
+        <span className="font-medium text-dark-100 flex-1">
           {info.label}
         </span>
-        
+
         <Tooltip text={operation.enabled ? 'Disable operation' : 'Enable operation'}>
           <button
             onClick={() => toggleOperation(operation.id)}
             className={`p-1.5 rounded-md transition-colors ${
-              operation.enabled 
-                ? 'text-cyan-300 hover:bg-cyan-300/10' 
-                : 'text-white/35 hover:bg-white/[0.06]'
+              operation.enabled
+                ? 'text-signal hover:bg-signal/10'
+                : 'text-dark-500 hover:bg-white/[0.06]'
             }`}
             aria-label={operation.enabled ? 'Disable operation' : 'Enable operation'}
           >
             <Power className="w-4 h-4" />
           </button>
         </Tooltip>
-        
+
         <Tooltip text={isExpanded ? 'Collapse settings' : 'Expand settings'}>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 rounded-md text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
+            className="p-1.5 rounded-md text-dark-400 hover:bg-white/[0.06] hover:text-dark-100 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </Tooltip>
-        
+
         <Tooltip text="Remove operation">
           <button
             onClick={() => removeOperation(operation.id)}
-            className="p-1.5 rounded-md text-white/50 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+            className="p-1.5 rounded-md text-dark-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
             aria-label="Remove operation"
           >
             <X className="w-4 h-4" />
           </button>
         </Tooltip>
       </div>
-      
+
       {/* Config */}
       {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-dark-700 animate-fade-in">
           {renderConfig()}
         </div>
       )}

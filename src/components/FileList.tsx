@@ -1,41 +1,30 @@
-/**
- * FileList.tsx - File Preview List
- * 
- * Displays all loaded files with their original and new names.
- * Supports drag-and-drop reordering which affects numbering operations.
- * Shows validation status, duplicate warnings, and error messages.
- * Uses @dnd-kit for accessible drag-and-drop functionality.
- */
-
-import { useState, useRef, useEffect } from 'react';
-import { 
-  File, 
-  Image, 
-  Video, 
-  Music, 
-  FileText, 
-  FileCode, 
-  Archive,
-  X,
+import { useEffect, useRef } from 'react';
+import {
   AlertCircle,
-  ArrowRight,
+  AlertTriangle,
+  Archive,
   Check,
   Copy,
-  AlertTriangle,
-  GripVertical
+  File,
+  FileCode,
+  FileText,
+  GripVertical,
+  Image,
+  Music,
+  Trash2,
+  Video,
+  X,
 } from 'lucide-react';
-
-import type { CSSProperties } from 'react';
 import { Tooltip } from './Tooltip';
 import {
   DndContext,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -45,41 +34,76 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useStore } from '../store';
 import type { FileItem } from '../types';
+import { ExportButton } from './ExportButton';
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / (1024 ** exponent);
+
+  return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+};
 
 const getFileIcon = (extension: string) => {
   const ext = extension.toLowerCase();
-  
+
   if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'].includes(ext)) {
-    return <Image className="w-5 h-5 text-green-400" />;
+    return <Image className="h-4 w-4 text-emerald-300" />;
   }
   if (['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv'].includes(ext)) {
-    return <Video className="w-5 h-5 text-purple-400" />;
+    return <Video className="h-4 w-4 text-violet-300" />;
   }
   if (['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma'].includes(ext)) {
-    return <Music className="w-5 h-5 text-pink-400" />;
+    return <Music className="h-4 w-4 text-pink-300" />;
   }
   if (['.txt', '.md', '.doc', '.docx', '.pdf', '.rtf'].includes(ext)) {
-    return <FileText className="w-5 h-5 text-blue-400" />;
+    return <FileText className="h-4 w-4 text-sky-300" />;
   }
   if (['.js', '.ts', '.jsx', '.tsx', '.html', '.css', '.json', '.py', '.java', '.cpp', '.c', '.h'].includes(ext)) {
-    return <FileCode className="w-5 h-5 text-yellow-400" />;
+    return <FileCode className="h-4 w-4 text-amber-300" />;
   }
   if (['.zip', '.rar', '.7z', '.tar', '.gz'].includes(ext)) {
-    return <Archive className="w-5 h-5 text-orange-400" />;
+    return <Archive className="h-4 w-4 text-orange-300" />;
   }
-  
-  return <File className="w-5 h-5 text-dark-400" />;
+
+  return <File className="h-4 w-4 text-dark-400" />;
 };
 
 const getErrorIcon = (errorMessage?: string) => {
   if (errorMessage?.includes('Duplicate')) {
-    return <Copy className="w-5 h-5 text-yellow-400" />;
+    return <Copy className="h-4 w-4" />;
   }
   if (errorMessage?.includes('invalid')) {
-    return <AlertTriangle className="w-5 h-5 text-red-400" />;
+    return <AlertTriangle className="h-4 w-4" />;
   }
-  return <AlertCircle className="w-5 h-5 text-red-400" />;
+  return <AlertCircle className="h-4 w-4" />;
 };
+
+function SelectAllCheckbox() {
+  const files = useStore(state => state.files);
+  const setAllFilesSelected = useStore(state => state.setAllFilesSelected);
+  const checkboxRef = useRef<HTMLInputElement>(null);
+  const selectedCount = files.filter(file => file.selected).length;
+  const allSelected = files.length > 0 && selectedCount === files.length;
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = selectedCount > 0 && selectedCount < files.length;
+    }
+  }, [files.length, selectedCount]);
+
+  return (
+    <input
+      ref={checkboxRef}
+      type="checkbox"
+      checked={allSelected}
+      onChange={event => setAllFilesSelected(event.target.checked)}
+      aria-label={allSelected ? 'Deselect all files' : 'Select all files'}
+    />
+  );
+}
 
 interface FileItemRowProps {
   file: FileItem;
@@ -88,9 +112,10 @@ interface FileItemRowProps {
 
 function SortableFileItemRow({ file, index }: FileItemRowProps) {
   const removeFile = useStore(state => state.removeFile);
+  const toggleFileSelection = useStore(state => state.toggleFileSelection);
   const hasChanged = file.originalName !== file.newName;
   const isDuplicate = file.errorMessage?.includes('Duplicate');
-  
+
   const {
     attributes,
     listeners,
@@ -99,98 +124,93 @@ function SortableFileItemRow({ file, index }: FileItemRowProps) {
     transition,
     isDragging,
   } = useSortable({ id: file.id });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.58 : 1,
     zIndex: isDragging ? 50 : 1,
   };
-  
+
+  const statusClass = !file.selected
+    ? 'neutral'
+    : !file.isValid
+      ? isDuplicate ? 'warning' : 'danger'
+      : hasChanged ? 'success' : 'neutral';
+
+  const statusText = !file.selected
+    ? 'Skipped'
+    : !file.isValid
+      ? isDuplicate ? 'Duplicate' : 'Issue'
+      : hasChanged ? 'Ready' : 'No change';
+
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
-      className={`
-        file-item flex items-center gap-3 p-3 rounded-lg transition-all group
-        ${!file.isValid 
-          ? isDuplicate
-            ? 'bg-yellow-500/10 border border-yellow-500/30'
-            : 'bg-red-500/10 border border-red-500/30' 
-          : hasChanged 
-            ? 'bg-cyan-500/5 border border-cyan-500/20 hover:border-cyan-500/40' 
-            : 'bg-dark-800 border border-transparent hover:border-dark-600'
-        }
-        ${isDragging ? 'shadow-lg shadow-cyan-500/20 border-cyan-500/30' : ''}
-      `}
+      className={`file-table-row ${file.selected ? '' : 'is-muted'} ${!file.isValid ? 'has-error' : ''} ${isDragging ? 'is-dragging' : ''}`}
     >
-      {/* Drag handle */}
-      <div 
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing text-dark-500 hover:text-cyan-400 transition-colors touch-none"
-      >
-        <GripVertical className="w-4 h-4" />
+      <div className="cell cell-check">
+        <input
+          type="checkbox"
+          checked={file.selected}
+          onChange={() => toggleFileSelection(file.id)}
+          aria-label={`${file.selected ? 'Deselect' : 'Select'} ${file.originalName}`}
+        />
       </div>
-      
-      {/* Index */}
-      <span className="w-8 text-sm text-dark-500 text-center font-mono">
-        {(index + 1).toString().padStart(2, '0')}
-      </span>
-      
-      {/* Icon */}
-      <div className="flex-shrink-0">
-        {getFileIcon(file.extension)}
-      </div>
-      
-      {/* Original name */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm truncate ${hasChanged ? 'text-dark-400 line-through' : 'text-dark-200'}`}
-           title={file.originalName}>
-          {file.originalName}
-        </p>
-      </div>
-      
-      {/* Arrow */}
-      {hasChanged && (
-        <ArrowRight className="w-4 h-4 text-cyan-500 flex-shrink-0 animate-pulse" />
-      )}
-      
-      {/* New name with highlight */}
-      {hasChanged && (
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm truncate font-medium ${
-            file.isValid ? 'text-cyan-400' : isDuplicate ? 'text-yellow-400' : 'text-red-400'
-          }`}
-             title={file.newName}>
-            {file.newName}
-          </p>
-        </div>
-      )}
-      
-      {/* Status */}
-      <div className="w-6 flex-shrink-0">
-        {!file.isValid ? (
-          <Tooltip text={file.errorMessage || ''} position="top">
-            <div className="cursor-help">
-              {getErrorIcon(file.errorMessage)}
-            </div>
-          </Tooltip>
-        ) : hasChanged ? (
-          <Check className="w-5 h-5 text-green-400" />
-        ) : null}
-      </div>
-      
-      {/* Remove */}
-      <Tooltip text="Remove file" position="left">
+
+      <div className="cell cell-handle">
         <button
-          onClick={() => removeFile(file.id)}
-          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-dark-700 text-dark-400 hover:text-red-400 transition-all"
-          aria-label="Remove file"
+          type="button"
+          className="drag-handle"
+          aria-label={`Move ${file.originalName}`}
+          {...attributes}
+          {...listeners}
         >
-          <X className="w-4 h-4" />
+          <GripVertical className="h-4 w-4" />
         </button>
-      </Tooltip>
+      </div>
+
+      <div className="cell cell-name">
+        <span className="file-type-icon" aria-hidden="true">
+          {getFileIcon(file.extension)}
+        </span>
+        <div className="min-w-0">
+          <p className="file-name" title={file.originalName}>{file.originalName}</p>
+          <p className="file-meta">#{(index + 1).toString().padStart(2, '0')}</p>
+        </div>
+      </div>
+
+      <div className="cell cell-preview">
+        <p className={`preview-name ${hasChanged ? 'is-changed' : ''}`} title={file.newName}>
+          {file.newName}
+        </p>
+        {file.errorMessage && (
+          <p className="preview-error" title={file.errorMessage}>{file.errorMessage}</p>
+        )}
+      </div>
+
+      <div className="cell cell-size">{formatFileSize(file.originalFile.size)}</div>
+
+      <div className="cell cell-status">
+        <span className={`status-pill ${statusClass}`}>
+          {!file.isValid && file.selected ? getErrorIcon(file.errorMessage) : <Check className="h-4 w-4" />}
+          {statusText}
+        </span>
+      </div>
+
+      <div className="cell cell-actions">
+        <Tooltip text="Remove file" position="left">
+          <button
+            type="button"
+            onClick={() => removeFile(file.id)}
+            className="icon-button danger"
+            aria-label={`Remove ${file.originalName}`}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   );
 }
@@ -199,28 +219,7 @@ export function FileList() {
   const files = useStore(state => state.files);
   const clearFiles = useStore(state => state.clearFiles);
   const reorderFiles = useStore(state => state.reorderFiles);
-  
-  const listRef = useRef<HTMLDivElement>(null);
-  const [singleItemHeight, setSingleItemHeight] = useState(60);
-  
-  useEffect(() => {
-    if (files.length > 0) {
-      const measureTimeout = setTimeout(() => {
-        if (listRef.current) {
-          const firstItem = listRef.current.querySelector('.file-item') as HTMLElement;
-          if (firstItem) {
-            const itemRect = firstItem.getBoundingClientRect();
-            const itemHeight = itemRect.height + 8;
-            if (itemHeight > 0 && itemHeight !== singleItemHeight) {
-              setSingleItemHeight(itemHeight);
-            }
-          }
-        }
-      }, 50);
-      return () => clearTimeout(measureTimeout);
-    }
-  }, [files.length, singleItemHeight]);
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -231,122 +230,100 @@ export function FileList() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
-      const oldIndex = files.findIndex(f => f.id === active.id);
-      const newIndex = files.findIndex(f => f.id === over.id);
+      const oldIndex = files.findIndex(file => file.id === active.id);
+      const newIndex = files.findIndex(file => file.id === over.id);
       if (oldIndex >= 0 && newIndex >= 0) {
         reorderFiles(oldIndex, newIndex);
       }
     }
   };
-  
+
+  const selectedFiles = files.filter(file => file.selected);
+  const selectedCount = selectedFiles.length;
+  const changedCount = selectedFiles.filter(file => file.originalName !== file.newName).length;
+  const issueCount = selectedFiles.filter(file => !file.isValid).length;
+  const totalSize = selectedFiles.reduce((sum, file) => sum + file.originalFile.size, 0);
+
   if (files.length === 0) {
     return (
-      <section className="panel p-5 flex min-h-[360px] flex-col">
-        <div className="section-heading mb-4">
+      <section className="panel file-panel empty-file-panel">
+        <div className="section-heading">
           <h2>Files (0)</h2>
         </div>
-        <div className="flex items-center justify-center py-8 flex-1">
-          <div className="text-center text-white/45">
-            <File className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm text-white/65">No files loaded</p>
-            <p className="text-xs mt-1">Import files to begin</p>
-          </div>
+        <div className="empty-state">
+          <File className="h-12 w-12" />
+          <p>No files loaded</p>
+          <span>Import files to preview rename results.</span>
         </div>
       </section>
     );
   }
-  
-  const changedCount = files.filter(f => f.originalName !== f.newName).length;
-  const duplicateCount = files.filter(f => f.errorMessage?.includes('Duplicate')).length;
-  const errorCount = files.filter(f => !f.isValid && !f.errorMessage?.includes('Duplicate')).length;
-  
-  const MAX_ITEMS_VISIBLE = 30;
-  const HEADER_PADDING = 76;
-  const BOTTOM_PADDING = 20;
-  
-  const calculatedContentHeight = (files.length * singleItemHeight) - 8;
-  const maxContentHeight = (MAX_ITEMS_VISIBLE * singleItemHeight) - 8;
-  
-  let panelStyle: CSSProperties;
-  let listStyle: CSSProperties;
-  
-  if (files.length > MAX_ITEMS_VISIBLE) {
-    const totalPanelHeight = maxContentHeight + HEADER_PADDING + BOTTOM_PADDING;
-    panelStyle = { height: `${totalPanelHeight}px` };
-    listStyle = { 
-      height: `${maxContentHeight}px`, 
-      overflowY: 'auto', 
-      overflowX: 'hidden', 
-      scrollbarGutter: 'stable' 
-    };
-  } else {
-    const totalPanelHeight = calculatedContentHeight + HEADER_PADDING + BOTTOM_PADDING;
-    panelStyle = { height: `${totalPanelHeight}px` };
-    listStyle = { 
-      overflowY: 'hidden', 
-      overflowX: 'hidden' 
-    };
-  }
-  
+
   return (
-    <section className="panel p-5 flex flex-col" style={panelStyle}>
-      {/* Header */}
-      <div className="section-heading mb-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h2>
-            Files ({files.length})
-          </h2>
-          {changedCount > 0 && (
-            <span className="count-pill">
-              {changedCount} queued
-            </span>
-          )}
-          {duplicateCount > 0 && (
-            <span className="count-pill warning">
-              {duplicateCount} duplicates
-            </span>
-          )}
-          {errorCount > 0 && (
-            <span className="count-pill danger">
-              {errorCount} errors
-            </span>
-          )}
+    <section className="panel file-panel">
+      <div className="file-panel-header">
+        <div className="flex min-w-0 items-center gap-3">
+          <h2>Files ({files.length})</h2>
+          {changedCount > 0 && <span className="count-pill">{changedCount} queued</span>}
+          {issueCount > 0 && <span className="count-pill danger">{issueCount} issues</span>}
         </div>
-        
+
         <button
+          type="button"
           onClick={clearFiles}
-          className="text-sm font-medium text-white/45 transition-colors hover:text-red-300"
+          className="btn btn-ghost compact"
         >
+          <Trash2 className="h-4 w-4" />
           Clear all
         </button>
       </div>
-      
-      {/* File list with drag and drop */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={files.map(f => f.id)}
-          strategy={verticalListSortingStrategy}
+
+      <div className="file-table">
+        <div className="file-table-header">
+          <div className="cell cell-check"><SelectAllCheckbox /></div>
+          <div className="cell cell-handle" />
+          <div className="cell">Original name</div>
+          <div className="cell">Preview name</div>
+          <div className="cell">Size</div>
+          <div className="cell">Status</div>
+          <div className="cell" />
+        </div>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <div 
-            ref={listRef}
-            className="space-y-2 pr-1"
-            style={listStyle}
+          <SortableContext
+            items={files.map(file => file.id)}
+            strategy={verticalListSortingStrategy}
           >
-            {files.map((file, index) => (
-              <SortableFileItemRow key={file.id} file={file} index={index} />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+            <div className="file-table-body">
+              {files.map((file, index) => (
+                <SortableFileItemRow key={file.id} file={file} index={index} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      <div className="file-panel-footer" id="export">
+        <div className="file-summary">
+          <span className={issueCount > 0 ? 'summary-label warning' : 'summary-label'}>{issueCount > 0 ? 'Review' : 'Selection'}</span>
+          <span>{selectedCount} of {files.length} files selected</span>
+          <span className="summary-divider" />
+          <span>Total size: {formatFileSize(totalSize)}</span>
+          <span className="summary-divider" />
+          <span>{issueCount > 0 ? `${issueCount} issue${issueCount === 1 ? '' : 's'} to resolve` : 'Ready when preview looks right'}</span>
+        </div>
+
+        <ExportButton />
+      </div>
     </section>
   );
 }

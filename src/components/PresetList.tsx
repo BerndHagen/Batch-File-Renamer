@@ -64,28 +64,28 @@ function PresetButton({ preset, isCustom }: PresetButtonProps) {
       <button
         onClick={() => applyPreset(preset)}
         className={`
-          preset-btn w-full text-left flex items-center gap-3 relative overflow-hidden
-          ${isActive ? 'active' : ''}
+          preset-btn w-full text-left flex items-center gap-3 relative
+          ${isActive ? 'active rail' : ''}
         `}
       >
         <span className={`
           relative flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200
-          ${isActive 
-            ? 'bg-cyan-400/15 text-cyan-200' 
-            : 'bg-white/[0.04] text-white/45 group-hover:bg-white/[0.07] group-hover:text-cyan-200'
+          ${isActive
+            ? 'bg-signal/15 text-signal'
+            : 'bg-dark-950 text-dark-400 group-hover:bg-white/[0.05] group-hover:text-signal'
           }
         `}>
           {icon}
         </span>
-        
+
         <div className="flex-1 min-w-0 relative">
           <p className="font-medium truncate">{preset.name}</p>
           <p className="text-xs text-dark-500 truncate group-hover:text-dark-400 transition-colors">{preset.description}</p>
         </div>
-        
+
         {isActive && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <div className="w-2 h-2 rounded-full bg-cyan-300" />
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+            <div className="w-1.5 h-1.5 rounded-full bg-signal" />
           </div>
         )}
       </button>
@@ -111,14 +111,14 @@ export function PresetList() {
   const customPresets = useStore(state => state.customPresets);
   
   return (
-    <section className="panel p-5">
+    <section className="panel p-4">
       <div className="section-heading mb-4">
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-amber-300" />
+          <Zap className="w-4 h-4 text-signal" />
           <h2>Quick Presets</h2>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 gap-2">
         {presets.map(preset => (
           <PresetButton key={preset.id} preset={preset} />

@@ -15,6 +15,7 @@ export interface FileItem {
   originalName: string;
   newName: string;
   extension: string;
+  selected: boolean;
   isValid: boolean;
   errorMessage?: string;
 }
@@ -140,6 +141,8 @@ export interface AppState {
   addFiles: (files: File[]) => void;
   removeFile: (id: string) => void;
   clearFiles: () => void;
+  toggleFileSelection: (id: string) => void;
+  setAllFilesSelected: (selected: boolean) => void;
   reorderFiles: (startIndex: number, endIndex: number) => void;
   
   addOperation: (type: OperationType) => void;

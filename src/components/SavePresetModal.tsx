@@ -113,9 +113,9 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
                   onClick={() => setSelectedIcon(opt.id)}
                   className={`
                     p-2.5 rounded-md border transition-all duration-200 flex items-center justify-center
-                    ${selectedIcon === opt.id 
-                      ? 'border-cyan-300/60 bg-cyan-300/10 text-cyan-200' 
-                      : 'border-white/10 bg-white/[0.04] text-white/45 hover:border-white/20 hover:text-white/75'
+                    ${selectedIcon === opt.id
+                      ? 'border-signal/60 bg-signal/10 text-signal'
+                      : 'border-white/10 bg-white/[0.04] text-dark-400 hover:border-white/20 hover:text-dark-200'
                     }
                   `}
                   title={opt.label}
@@ -132,7 +132,7 @@ export function SavePresetModal({ isOpen, onClose }: SavePresetModalProps) {
               {operations.map((op, i) => (
                 <span 
                   key={op.id} 
-                  className={`rounded px-2 py-0.5 text-xs ${op.enabled ? 'bg-cyan-300/15 text-cyan-200' : 'bg-white/[0.06] text-white/40'}`}
+                  className={`rounded px-2 py-0.5 text-xs ${op.enabled ? 'bg-signal/15 text-signal' : 'bg-white/[0.06] text-dark-500'}`}
                 >
                   {i + 1}. {op.type}
                 </span>

@@ -8,92 +8,56 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316', // Main orange
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
-          950: '#431407',
-        },
-        accent: {
-          orange: '#ff6b35',
-          orangeLight: '#f77f00',
-          gold: '#fbbf24',
+        signal: {
+          200: '#c9e4ff',
+          300: '#8cc4ff',
+          400: '#5aa7ff',
+          500: '#3291ff',
+          600: '#1f79df',
+          DEFAULT: '#3291ff',
         },
         dark: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          850: '#172033', // Primary dark - slightly blue tint
-          900: '#0f172a',
-          950: '#020617',
-        }
+          50: '#f6f9fb',
+          100: '#eef4f8',
+          200: '#d7e2e8',
+          300: '#b7c7d0',
+          400: '#8fa3ae',
+          500: '#73828c',
+          600: '#55656f',
+          700: '#33424a',
+          800: '#1b2830',
+          850: '#121b20',
+          900: '#0d151a',
+          950: '#091014',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out',
-        'slide-up': 'slideUp 0.4s ease-out',
-        'pulse-orange': 'pulseOrange 2s infinite',
-        'highlight': 'highlight 0.5s ease-out',
-        'glow': 'glow 2s ease-in-out infinite alternate',
-        'float': 'float 3s ease-in-out infinite',
-        'success': 'successPop 0.4s ease-out',
+        'fade-in': 'fadeIn 0.22s ease-out',
+        'slide-up': 'slideUp 0.26s cubic-bezier(0.22, 1, 0.36, 1)',
+        'menu-in': 'menuIn 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
+        'rail-in': 'railIn 0.24s cubic-bezier(0.22, 1, 0.36, 1)',
       },
       keyframes: {
         fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          '0%': { opacity: '0', transform: 'translateY(10px) scale(0.99)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
-        pulseOrange: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(249, 115, 22, 0.4)' },
-          '50%': { boxShadow: '0 0 0 12px rgba(249, 115, 22, 0)' },
+        menuIn: {
+          '0%': { opacity: '0', transform: 'translateY(-6px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
-        highlight: {
-          '0%': { backgroundColor: 'rgba(249, 115, 22, 0.3)' },
-          '100%': { backgroundColor: 'transparent' },
+        railIn: {
+          '0%': { transform: 'scaleY(0)' },
+          '100%': { transform: 'scaleY(1)' },
         },
-        glow: {
-          '0%': { boxShadow: '0 0 20px rgba(249, 115, 22, 0.2)' },
-          '100%': { boxShadow: '0 0 40px rgba(249, 115, 22, 0.4)' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        successPop: {
-          '0%': { transform: 'scale(0.8)', opacity: '0' },
-          '50%': { transform: 'scale(1.1)' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-      },
-      boxShadow: {
-        'glow-sm': '0 0 15px rgba(249, 115, 22, 0.2)',
-        'glow': '0 0 30px rgba(249, 115, 22, 0.3)',
-        'glow-lg': '0 0 50px rgba(249, 115, 22, 0.4)',
-        'inner-glow': 'inset 0 0 30px rgba(249, 115, 22, 0.1)',
-      },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
     },
   },

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
-  Activity,
   AlertTriangle,
+  CheckCircle2,
+  Clock3,
   Files,
-  ListChecks,
   Redo2,
   Save,
   Settings2,
-  ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   Undo2,
   Zap,
@@ -18,7 +19,6 @@ import { FileList } from './components/FileList';
 import { PresetList } from './components/PresetList';
 import { OperationsList } from './components/OperationsList';
 import { AddOperationButton } from './components/AddOperationButton';
-import { ExportButton } from './components/ExportButton';
 import { SavePresetModal } from './components/SavePresetModal';
 import { Tooltip } from './components/Tooltip';
 import { useStore } from './store';
@@ -30,6 +30,27 @@ const isEditableTarget = (target: EventTarget | null) => {
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
   );
 };
+
+interface MetricCardProps {
+  icon: ReactNode;
+  label: string;
+  value: number;
+  detail: string;
+  tone?: 'default' | 'warning' | 'success';
+}
+
+function MetricCard({ icon, label, value, detail, tone = 'default' }: MetricCardProps) {
+  return (
+    <div className={`metric-card metric-card-${tone}`}>
+      <span className="metric-card-icon">{icon}</span>
+      <div className="min-w-0">
+        <div className="metric-card-value">{value}</div>
+        <div className="metric-card-label">{label}</div>
+        <div className="metric-card-detail">{detail}</div>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -72,73 +93,77 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canRedo, canUndo, redo, undo]);
 
-  const changedCount = files.filter(f => f.originalName !== f.newName).length;
-  const errorCount = files.filter(f => !f.isValid).length;
-  const validCount = files.length - errorCount;
-  const statusText = errorCount > 0 ? `${errorCount} issue${errorCount === 1 ? '' : 's'}` : 'Clean';
+  const selectedCount = files.filter(file => file.selected).length;
+  const changedCount = files.filter(file => file.selected && file.originalName !== file.newName).length;
+  const issueCount = files.filter(file => file.selected && !file.isValid).length;
+  const readyDetail = files.length === 0
+    ? 'Add files to begin'
+    : selectedCount === 0
+      ? 'No files selected'
+      : issueCount > 0
+        ? 'Needs attention'
+        : 'Ready to export';
 
   return (
-    <div className="app-shell min-h-screen flex flex-col">
-      <div className="ambient-grid" />
-      <div className="ambient-beam ambient-beam-a" />
-      <div className="ambient-beam ambient-beam-b" />
-
+    <div className="app-shell min-h-screen">
       <Header />
 
-      <main className="relative z-10 flex-1 container mx-auto px-4 py-6 lg:py-8">
-        <section className="command-bar mb-6">
-          <div className="min-w-0">
-            <p className="eyebrow">Rename Console</p>
-            <h2 className="command-title">Batch processing workspace</h2>
-          </div>
-
-          <div className="command-metrics">
-            <div className="metric">
-              <Files className="metric-icon text-cyan-300" />
-              <span className="metric-value">{files.length}</span>
-              <span className="metric-label">Files</span>
-            </div>
-            <div className="metric">
-              <Activity className="metric-icon text-amber-300" />
-              <span className="metric-value">{changedCount}</span>
-              <span className="metric-label">Queued</span>
-            </div>
-            <div className={`metric ${errorCount > 0 ? 'metric-danger' : ''}`}>
-              {errorCount > 0 ? (
-                <AlertTriangle className="metric-icon text-red-300" />
-              ) : (
-                <ShieldCheck className="metric-icon text-emerald-300" />
-              )}
-              <span className="metric-value">{errorCount}</span>
-              <span className="metric-label">Issues</span>
+      <main className="workspace-page">
+        <section className="workspace-top">
+          <div className="workspace-titlebar">
+            <span className="workspace-accent" aria-hidden="true" />
+            <div className="min-w-0">
+              <h2>Rename Workspace</h2>
+              <p>Add files, build rules, preview changes, and export with confidence.</p>
             </div>
           </div>
 
-          <div className="command-action">
-            <ExportButton />
+          <div className="metric-grid" aria-label="Workspace status">
+            <MetricCard
+              icon={<Files className="h-5 w-5" />}
+              label="Files"
+              value={files.length}
+              detail={`${selectedCount} selected`}
+            />
+            <MetricCard
+              icon={<Clock3 className="h-5 w-5" />}
+              label="Queued"
+              value={changedCount}
+              detail={readyDetail}
+              tone={issueCount > 0 ? 'warning' : changedCount > 0 ? 'success' : 'default'}
+            />
+            <MetricCard
+              icon={issueCount > 0 ? <AlertTriangle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+              label="Issues"
+              value={issueCount}
+              detail={issueCount > 0 ? 'Fix before export' : 'No issues found'}
+              tone={issueCount > 0 ? 'warning' : 'success'}
+            />
           </div>
         </section>
 
-        <div className="workspace-grid">
-          <section className="space-y-5 min-w-0">
+        <div className="workspace-layout">
+          <section className="workspace-main" aria-label="Files and preview">
             <DropZone />
             <FileList />
           </section>
 
-          <aside className="space-y-5 min-w-0">
-            <PresetList />
+          <aside className="workspace-sidebar" aria-label="Presets and operations">
+            <div id="presets">
+              <PresetList />
+            </div>
 
-            <section className="panel p-5">
-              <div className="section-heading mb-4">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Settings2 className="w-5 h-5 text-cyan-300" />
+            <section className="panel operations-panel" id="operations">
+              <div className="section-heading operations-heading">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Settings2 className="h-4 w-4 text-signal" />
                   <h2>Operations</h2>
                   {operations.length > 0 && (
                     <span className="count-pill">{operations.length}</span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="toolbar-actions">
                   <Tooltip text="Undo (Ctrl+Z)">
                     <button
                       onClick={undo}
@@ -146,7 +171,7 @@ function App() {
                       className="icon-button"
                       aria-label="Undo"
                     >
-                      <Undo2 className="w-4 h-4" />
+                      <Undo2 className="h-4 w-4" />
                     </button>
                   </Tooltip>
                   <Tooltip text="Redo (Ctrl+Y)">
@@ -156,7 +181,7 @@ function App() {
                       className="icon-button"
                       aria-label="Redo"
                     >
-                      <Redo2 className="w-4 h-4" />
+                      <Redo2 className="h-4 w-4" />
                     </button>
                   </Tooltip>
 
@@ -168,7 +193,7 @@ function App() {
                       className={`icon-button ${showAdvanced ? 'is-active' : ''}`}
                       aria-label={showAdvanced ? 'Switch to basic mode' : 'Switch to advanced mode'}
                     >
-                      <Zap className="w-4 h-4" />
+                      {showAdvanced ? <SlidersHorizontal className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
                     </button>
                   </Tooltip>
 
@@ -181,7 +206,7 @@ function App() {
                           className="icon-button"
                           aria-label="Save preset"
                         >
-                          <Save className="w-4 h-4" />
+                          <Save className="h-4 w-4" />
                         </button>
                       </Tooltip>
                       <Tooltip text="Clear operations">
@@ -190,7 +215,7 @@ function App() {
                           className="icon-button danger"
                           aria-label="Clear operations"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </Tooltip>
                     </>
@@ -204,42 +229,16 @@ function App() {
                 <AddOperationButton />
               </div>
             </section>
-
-            <section className="panel p-5">
-              <div className="section-heading mb-4">
-                <div className="flex items-center gap-2">
-                  <ListChecks className="w-5 h-5 text-emerald-300" />
-                  <h2>Integrity</h2>
-                </div>
-              </div>
-
-              <div className="status-stack">
-                <div className="status-row">
-                  <span>Queue</span>
-                  <strong>{files.length > 0 ? `${validCount}/${files.length} valid` : 'Empty'}</strong>
-                </div>
-                <div className="status-row">
-                  <span>Rule chain</span>
-                  <strong>{operations.length > 0 ? `${operations.length} active` : 'Idle'}</strong>
-                </div>
-                <div className="status-row">
-                  <span>Validation</span>
-                  <strong className={errorCount > 0 ? 'text-red-300' : 'text-emerald-300'}>
-                    {statusText}
-                  </strong>
-                </div>
-              </div>
-            </section>
           </aside>
         </div>
       </main>
-
-      <Footer />
 
       <SavePresetModal
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
       />
+
+      <Footer />
     </div>
   );
 }

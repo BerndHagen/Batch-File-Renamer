@@ -85,10 +85,10 @@ export function Tooltip({ children, text, position = 'top' }: TooltipProps) {
   };
   
   const arrowClasses = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-dark-600',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-dark-600',
-    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-dark-600',
-    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-dark-600',
+    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-dark-700',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-dark-700',
+    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-dark-700',
+    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-dark-700',
   };
   
   return (
@@ -104,7 +104,7 @@ export function Tooltip({ children, text, position = 'top' }: TooltipProps) {
       {isVisible && createPortal(
         <div 
           style={getTooltipStyle()}
-          className="z-[9999] px-2.5 py-1.5 text-xs font-medium text-white bg-dark-600 rounded-md shadow-lg whitespace-nowrap pointer-events-none"
+          className="z-[9999] px-2.5 py-1.5 text-xs font-medium text-dark-100 bg-dark-850 border border-dark-700 rounded-md shadow-xl shadow-black/40 whitespace-nowrap pointer-events-none"
         >
           {text}
           <div 

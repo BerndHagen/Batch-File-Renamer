@@ -182,7 +182,7 @@ const defaultPresets: Preset[] = [
   {
     id: 'replace-spaces',
     name: 'Replace Spaces',
-    description: 'Spaces → Underscores',
+    description: 'Spaces to underscores',
     icon: 'arrow-right-left',
     operations: [
       {
@@ -720,6 +720,7 @@ export const useStore = create<AppState>()(
               originalName: file.name,
               newName: file.name,
               extension,
+              selected: true,
               isValid: true,
             };
           });
@@ -735,6 +736,22 @@ export const useStore = create<AppState>()(
       
       clearFiles: () => {
         set({ files: [] });
+      },
+
+      toggleFileSelection: (id: string) => {
+        set({
+          files: get().files.map(file =>
+            file.id === id ? { ...file, selected: !file.selected } : file
+          ),
+        });
+        get().processFiles();
+      },
+
+      setAllFilesSelected: (selected: boolean) => {
+        set({
+          files: get().files.map(file => ({ ...file, selected })),
+        });
+        get().processFiles();
       },
       
       reorderFiles: (startIndex: number, endIndex: number) => {
@@ -837,7 +854,7 @@ export const useStore = create<AppState>()(
         // Check for duplicates
         const nameCount = new Map<string, number>();
         for (const file of processedFiles) {
-          if (!file.isValid) continue;
+          if (!file.isValid || !file.selected) continue;
           const normalizedName = file.newName.toLocaleLowerCase();
           const count = nameCount.get(normalizedName) || 0;
           nameCount.set(normalizedName, count + 1);
@@ -845,7 +862,7 @@ export const useStore = create<AppState>()(
         
         const finalFiles = processedFiles.map(file => {
           const normalizedName = file.newName.toLocaleLowerCase();
-          if (file.isValid && (nameCount.get(normalizedName) || 0) > 1) {
+          if (file.selected && file.isValid && (nameCount.get(normalizedName) || 0) > 1) {
             return {
               ...file,
               isValid: false,
